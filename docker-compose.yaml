@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  database:
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_DATABASE: myDB 
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_PORT: 3306
+    ports:
+      - '3306:3306'
+    expose:
+      - 3306
+    volumes:
+      - my-db:/var/lib/mysql
+  
+  server:
+    build:
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      MYSQL_DATABASE: myDB 
+      MYSQL_HOST: database
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_PORT: 3306
+    ports:
+      - "5000:5000"
+
+volumes:
+  my-db:
