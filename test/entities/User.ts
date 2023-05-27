@@ -14,8 +14,8 @@ export class User extends Entity {
             columns: []
         });
 
-        this.id = new Column({ name: "id", type: "VARCHAR(30)", constraints: { primary_key: true, not_null: true } });
-        this.name = new Column({ name: "name", type: "VARCHAR(30)", constraints: { not_null: true } });
+        this.id = new Column({ name: "id", type: "VARCHAR(30)", constraints: { NOT_NULL: true } });
+        this.name = new Column({ name: "name", type: "VARCHAR(30)", constraints: { NOT_NULL: true } });
         this.age = new Column({ name: "age", type: "INTEGER(30)"});
 
         this.addColumns(this.id, this.name, this.age);

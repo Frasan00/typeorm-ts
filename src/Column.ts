@@ -1,11 +1,10 @@
 export type ColumnType = `VARCHAR(${number})` | `CHAR(${number})` | `TEXT(${number})` | `BLOB(${number})` | `ENUM<${string}>` | `ENUM<${any}>` | `BIT(${number})` | `INTEGER(${number})` | `BOOLEAN(${number})` | `FLOAT(${number})` | `DATE` | "YEAR";
 
 export type ConstraintsType = {
-    not_null?: boolean | false;
-    unique?: boolean | false;
-    primary_key?: boolean | false;
-    foreign_key?: boolean | false;
-    default?: boolean | false;
+    NOT_NULL?: boolean | false;
+    UNIQUE?: boolean | false;
+    DEFAULT?: ColumnType | false;
+    AUTO_INCREMENT?: boolean | false;
 }
 
 interface IColumnInput {
