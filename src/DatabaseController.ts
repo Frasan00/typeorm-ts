@@ -7,7 +7,7 @@ interface IDatabaseController {
     readonly user_name: string,
     readonly password: string,
     readonly port?: number,
-    readonly entities: any[]
+    readonly entities: Entity[]
 }
 
 
@@ -16,7 +16,7 @@ export class DatabaseController {
     protected entities: Entity[]
 
     public constructor(input: IDatabaseController){
-        // mysql initialization
+        // mysql connection
         this.mysql = mysql.createConnection({
             host: input.host,
             database: input.db_name,
@@ -38,7 +38,22 @@ export class DatabaseController {
     }
 
     protected async processEntities(entities: Entity[]){
-        
+        if(this.entities.length === 0) throw new Error(`There are no entities to initialize`);
+        const promises = entities.map(async (entity) => {
+            const query: string = entity.initializeColumns();
+            if(!query) throw new Error(`Error while creating the query for Entity: ${entity.getName()}`);
+
+            return new Promise((resolve, reject) => {
+                this.mysql.query(query, (err, result) => {
+                    if(err) reject(`Error while applying the query for Entity: ${entity.getName()}`);
+                    else resolve(result);
+                });
+                console.log(query);
+            })
+        });
+
+        await Promise.all(promises);
+        console.log("Entities initialized in the database");
     }
 
     public getModel(){

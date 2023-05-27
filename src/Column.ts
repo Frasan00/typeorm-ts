@@ -1,29 +1,30 @@
+type ColumnType = "string" | "number" | "date" | "boolean"; // to update
 
-type ColumnConfigType = {
-    type: string | number | Date | boolean, // to update
-    constraints: {
-        not_null?: boolean | false;
-        unique?: boolean | false;
-        primary_key?: boolean | false;
-        foreign_key?: boolean | false;
-        default?: boolean | false;
-    }
+type ConstraintsType = {
+    not_null?: boolean | false;
+    unique?: boolean | false;
+    primary_key?: boolean | false;
+    foreign_key?: boolean | false;
+    default?: boolean | false;
 }
 
 interface IColumnInput {
     readonly name: string,
-    readonly config: ColumnConfigType,
+    readonly type: ColumnType,
+    readonly constraints?: ConstraintsType
 };
 
 export class Column {
-    protected config: ColumnConfigType;
     protected name: string;
+    protected type: any;
+    protected constraints: ConstraintsType | undefined;
 
     public constructor(input: IColumnInput){
-        this.config = input.config;
         this.name = input.name;
+        this.type = input.type;
+        this.constraints = input.constraints;
     }
 
     public getName(){ return this.name; }
-    public getConf(){ return this.config }
+    public getConf(){ return { type: this.type, constraints: this.constraints } }
 }
