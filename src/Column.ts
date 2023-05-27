@@ -10,20 +10,25 @@ export type ConstraintsType = {
 interface IColumnInput {
     readonly name: string,
     readonly type: ColumnType,
-    readonly constraints?: ConstraintsType
+    readonly constraints?: ConstraintsType,
+    value?: any,
 };
 
 export class Column {
     protected name: string;
-    protected type: any;
+    protected type: ColumnType;
     protected constraints: ConstraintsType | undefined;
+    protected value?: any;
 
     public constructor(input: IColumnInput){
         this.name = input.name;
         this.type = input.type;
         this.constraints = input.constraints;
+        this.value = input.value || null;
     }
 
     public getName(){ return this.name; }
     public getConf(){ return { type: this.type, constraints: this.constraints } }
+    public getValue(){ return this.value; }
+    public setValue(value: any){ this.value = value; }
 }

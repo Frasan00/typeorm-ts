@@ -22,4 +22,13 @@ const mysql = new DatabaseController({
     entities: [new User()]
 });
 
+const userRepo = mysql.getModelRepository("user");
+
+const user = new User();
+user.name.setValue("Francesco");
+user.age.setValue(5);
+userRepo.save(user)
+    .then((_) => console.log("Saving completed"))
+    .catch((err) => console.error(err));
+
 app.listen(PORT, () => console.log("Listening on port "+PORT))

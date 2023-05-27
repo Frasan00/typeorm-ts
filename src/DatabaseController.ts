@@ -1,5 +1,6 @@
-import mysql from "mysql2";
+import mysql, { Pool } from "mysql2/promise";
 import { Entity } from "./Entity";
+import { ModelRepository } from "./ModelRepository";
 
 interface IDatabaseController {
     readonly host: string,
@@ -12,29 +13,31 @@ interface IDatabaseController {
 
 
 export class DatabaseController {
-    protected mysql: mysql.Connection;
-    protected entities: Entity[]
+    protected mysql: Pool;
+    protected entities: Entity[];
+    protected db_name: string;
 
     public constructor(input: IDatabaseController){
-        // mysql connection
-        this.mysql = mysql.createConnection({
+        this.mysql = mysql.createPool({
             host: input.host,
             database: input.db_name,
             user: input.user_name,
             password: input.password,
             port: input.port || 3306,
         });
-
-        this.mysql.connect((err) => {
-            if(!err) return console.log("Connected to the database!");
-            console.error({ 
-            message: "Couldn't connect to the database",
-            error: err
-        })});
+        this.connection()
+            .then((_) => console.log("Connected to the database on port: "+input.port || 3306))
+            .catch((err) => console.error(err));
         
+        this.db_name = input.db_name;
+
         // entities initialization
         this.entities = input.entities;
         this.processEntities(this.entities);
+    }
+
+    private async connection(){
+        await this.mysql.getConnection()
     }
 
     protected async processEntities(entities: Entity[]){
@@ -42,22 +45,21 @@ export class DatabaseController {
         const promises = entities.map(async (entity) => {
             const query: string = entity.initializeColumns();
             if(!query) throw new Error(`Error while creating the query for Entity: ${entity.getName()}`);
-
-            return new Promise((resolve, reject) => {
-                this.mysql.query(query, (err, result) => {
-                    if(err) reject(`Error while applying the query for Entity: ${entity.getName()}`);
-                    else resolve(result);
-                });
-                console.log(query);
-            })
+            console.log(query);
+            try {
+                await this.mysql.query(query);
+            }catch(err){
+                console.error(err);
+            }
         });
 
-        await Promise.all(promises);
-        console.log("Entities initialized in the database");
+        try{
+            await Promise.all(promises);
+        }catch(err){
+            console.error(err);
+        }
     }
 
-    public getModel(){
-
-    }
+    public getModelRepository(model: string): ModelRepository{ return new ModelRepository({ db_name: this.db_name, model: model, mysql: this.mysql }); }
 
 }
