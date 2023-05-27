@@ -1,4 +1,4 @@
-import { Column } from "./Column";
+import { Column, ColumnType } from "./Column";
 
 interface IEntityInput {
     readonly entityName: string,
@@ -25,7 +25,12 @@ export abstract class Entity {
     public initializeColumns(){
         if(this.columns.length === 0) throw new Error(`There are no columns to initialize in Entity ${this.entityName}`);
         const query = `
-        
+        CREATE TABLE IF NOT EXIST ${this.entityName} (
+            ${this.columns.map((column) => {
+                const columnName =  column.getName();
+                const type: ColumnType = column.getConf().type;
+            })}
+          );
         `;
 
         return query;

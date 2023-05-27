@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { DatabaseController } from "../src/DatabaseController";
+import { User } from "./entities/User";
 
 const config = require("dotenv").config();
 const app = express();
@@ -18,7 +19,7 @@ const mysql = new DatabaseController({
     user_name: process.env.MYSQL_USER || "admin",
     password: process.env.MYSQL_PASSWORD || "password",
     port: port,
-    Entities: []
+    entities: [new User()]
 });
 
 app.listen(PORT, () => console.log("Listening on port "+PORT))
