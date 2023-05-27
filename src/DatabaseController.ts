@@ -60,6 +60,6 @@ export class DatabaseController {
         }
     }
 
-    public getModelRepository(model: string): ModelRepository{ return new ModelRepository({ db_name: this.db_name, model: model, mysql: this.mysql }); }
+    public getModelRepository(model: Entity): ModelRepository{ return new ModelRepository({ db_name: this.db_name, model: model, mysql: this.mysql }); }
 
 }

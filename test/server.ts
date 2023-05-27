@@ -22,13 +22,30 @@ const mysql = new DatabaseController({
     entities: [new User()]
 });
 
-const userRepo = mysql.getModelRepository("user");
+const userRepo = mysql.getModelRepository(new User());
 
 const user = new User();
 user.name.setValue("Francesco");
 user.age.setValue(5);
-userRepo.save(user)
+/*userRepo.save(user)
     .then((_) => console.log("Saving completed"))
-    .catch((err) => console.error(err));
+    .catch((err) => console.error(err));*/
+userRepo.findOneById({id: 2});
+userRepo.find()
+    .then((data) => console.log(data))
+    .catch((err) => {}) ;
+
+userRepo.find({
+    select: [{
+        column: "name"
+    }],
+    where: [{
+        column: "id",
+        operator: "=",
+        value: 2
+    }]
+})
+.then((data) => console.log(data))
+.catch((err) => {}) ;
 
 app.listen(PORT, () => console.log("Listening on port "+PORT))
