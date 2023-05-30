@@ -44,7 +44,8 @@ userRepo.find({
         operator: "=",
         value: 3
     },
-    andWhere: [{
+    chainedWhere: [{
+        logicOperator: "AND",
         column: "name",
         operator: "=",
         value: "Giovanni"

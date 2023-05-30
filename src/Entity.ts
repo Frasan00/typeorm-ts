@@ -75,10 +75,8 @@ export abstract class Entity {
 
     query += "\n);";
     
-    // Updates the table with latest changes
+    // Updates the table with latest changes to do
     query+=` ALTER TABLE ${this.entityName} IF EXISTS`;
-
-
 
     
 

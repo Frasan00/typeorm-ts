@@ -19,6 +19,13 @@ type WhereConditionType = {
     value: any;
 };
 
+type ChainWhereConditionType = {
+    logicOperator: "AND" | "OR";
+    column: ColumnNameType;
+    operator?: OperatorType | `=`;
+    value: any;
+};
+
 type SelectType = {
     column: ColumnNameType;
     function?: FunctionsType | undefined;
@@ -34,7 +41,7 @@ type OrderByType = {
 type FindInputType = {
     select: SelectType[];
     where?: WhereConditionType;
-    andWhere?: WhereConditionType[];
+    chainedWhere?: ChainWhereConditionType[];
     joinAll?: Boolean | undefined;
     orderBy?: OrderByType[];
 };
@@ -67,7 +74,7 @@ export class ModelRepository {
 
     public async find(input?: FindInputType){
         // basic logic condition
-        if(input?.andWhere && !input?.where) throw new Error("You can't use andWhere without a base where condition");
+        if(input?.chainedWhere && !input?.where) throw new Error("You can't chain operations without a base where condition");
 
         const params = [];
         if (!input){
@@ -110,10 +117,18 @@ export class ModelRepository {
             params.push(input.where.value);
         }
 
-        if(input.andWhere) {
-            input.andWhere.forEach((andWhere) => {
-                query+=` AND ${andWhere.column} ${andWhere.operator} ? `;
-                params.push(andWhere.value);
+        if(input.chainedWhere) {
+            input.chainedWhere.forEach((chainedWhere) => {
+                switch (chainedWhere.logicOperator) {
+                    case "AND":
+                        query+=` AND ${chainedWhere.column} ${chainedWhere.operator} ? `;
+                        params.push(chainedWhere.value);
+                    case "OR":
+                        query+=` OR ${chainedWhere.column} ${chainedWhere.operator} ? `;
+                        params.push(chainedWhere.value);
+                    default:
+                        throw new Error("Invalid logical operator in chained where condition");
+                }
             });
         };
         
@@ -166,10 +181,18 @@ export class ModelRepository {
             params.push(input.where.value);
         }
 
-        if(input.andWhere) {
-            input.andWhere.forEach((andWhere) => {
-                query+=` AND ${andWhere.column} ${andWhere.operator} ? `;
-                params.push(andWhere.value);
+        if(input.chainedWhere) {
+            input.chainedWhere.forEach((chainedWhere) => {
+                switch (chainedWhere.logicOperator) {
+                    case "AND":
+                        query+=` AND ${chainedWhere.column} ${chainedWhere.operator} ? `;
+                        params.push(chainedWhere.value);
+                    case "OR":
+                        query+=` OR ${chainedWhere.column} ${chainedWhere.operator} ? `;
+                        params.push(chainedWhere.value);
+                    default:
+                        throw new Error("Invalid logical operator in chained where condition");
+                }
             });
         };
         
