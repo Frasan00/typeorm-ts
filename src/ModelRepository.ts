@@ -113,7 +113,7 @@ export class ModelRepository {
             if(!primary_key) throw new Error("There is no primary key for the entity "+this.model.getName());
 
             foreign_keys.forEach((relation) => {
-                query+=` \n LEFT JOIN ${relation[0]} table2 ON table1.${this.model.getEntityInfo().primary_key} = table2.${relation[1]}`;
+                query+=` \n LEFT JOIN ${relation[0]} table2 ON table1.${primary_key} = table2.${relation[1]}`;
             });
         };
         

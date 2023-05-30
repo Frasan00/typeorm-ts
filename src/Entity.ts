@@ -5,14 +5,14 @@ type ForeignKeysType = [string, string][];
 interface IEntityInput {
   readonly entityName: string;
   readonly columns?: Column[];
-  readonly primary_key?: Column[];
+  readonly primary_key?: Column;
   readonly foreign_keys?: ForeignKeysType; // [Entity name, Entity foreign key]
 }
 
 export abstract class Entity {
   protected entityName: string;
   protected columns: Column[];
-  protected primary_key?: Column[];
+  protected primary_key?: Column;
   protected foreign_keys?: ForeignKeysType;
 
   public constructor(input: IEntityInput) {
@@ -65,14 +65,11 @@ export abstract class Entity {
           })}
         `;
 
-    if (this.primary_key && this.primary_key.length > 0) {
-      const primaryKeyColumns = this.primary_key.map((column) => column.getName());
-      query += `,PRIMARY KEY (${primaryKeyColumns}) \n`;
-    }
+    if (this.primary_key) query += `\n PRIMARY KEY (${this.primary_key}) `;
 
     if (this.foreign_keys && this.foreign_keys.length > 0) {
       this.foreign_keys.forEach(([keyName, entityName]) => {
-        query += `,FOREIGN KEY (${keyName}) REFERENCES ${entityName}(${keyName})`;
+        query += `\nFOREIGN KEY (${keyName}) REFERENCES ${entityName}(${keyName}) `;
       });
     }
 
