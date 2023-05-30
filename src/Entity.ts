@@ -6,7 +6,7 @@ interface IEntityInput {
   readonly entityName: string;
   readonly columns?: Column[];
   readonly primary_key?: Column[];
-  readonly foreign_keys?: ForeignKeysType;
+  readonly foreign_keys?: ForeignKeysType; // [Entity name, Entity foreign key]
 }
 
 export abstract class Entity {

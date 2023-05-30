@@ -4,7 +4,7 @@ import { Entity } from "./Entity";
 interface IModelRepositoryInput {
     readonly model: Entity,
     readonly db_name: string,
-    mysql: mysql.Pool
+    mysql: mysql.Pool,
 }
 
 type ColumnNameType = string;
@@ -34,8 +34,8 @@ type OrderByType = {
 type FindInputType = {
     select: SelectType[];
     where?: WhereConditionType;
-    andWhere?: WhereConditionType[]
-    // relations to do
+    andWhere?: WhereConditionType[];
+    joinAll?: Boolean | undefined;
     orderBy?: OrderByType[];
 };
 
@@ -92,7 +92,7 @@ export class ModelRepository {
             else query+=`${select.column} `
         });
 
-        query+=`\n FROM ${this.model.getName()} \n `;
+        query+=`\n FROM ${this.model.getName()} table1 \n `;
 
         if(input.where) {
             query+=` WHERE ${input.where.column} ${input.where.operator} ? `;
@@ -103,6 +103,17 @@ export class ModelRepository {
             input.andWhere.forEach((andWhere) => {
                 query+=` AND ${andWhere.column} ${andWhere.operator} ? `;
                 params.push(andWhere.value);
+            });
+        };
+
+        if(input.joinAll){
+            const primary_key = this.model.getEntityInfo().primary_key;
+            const foreign_keys = this.model.getEntityInfo().foreign_keys;
+            if(!foreign_keys) throw new Error("There are no relations for the entity "+this.model.getName());
+            if(!primary_key) throw new Error("There is no primary key for the entity "+this.model.getName());
+
+            foreign_keys.forEach((relation) => {
+                query+=` \n LEFT JOIN ${relation[0]} table2 ON table1.${this.model.getEntityInfo().primary_key} = table2.${relation[1]}`;
             });
         };
         
