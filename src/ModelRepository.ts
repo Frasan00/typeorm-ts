@@ -69,6 +69,7 @@ export class ModelRepository {
         // basic logic condition
         if(input?.andWhere && !input?.where) throw new Error("You can't use andWhere without a base where condition");
 
+        const params = [];
         if (!input){
             try{
                 const [rows] = await this.mysql.query(`SELECT * FROM ${this.model.getName()}`); 
@@ -93,11 +94,15 @@ export class ModelRepository {
 
         query+=`\n FROM ${this.model.getName()} \n `;
 
-        if(input.where) query+=` WHERE ${input.where.column} ${input.where.operator} ${input.where.value} `;
+        if(input.where) {
+            query+=` WHERE ${input.where.column} ${input.where.operator} ? `;
+            params.push(input.where.value);
+        }
 
         if(input.andWhere) {
             input.andWhere.forEach((andWhere) => {
-                query+=` AND ${andWhere.column} ${andWhere.operator} ${andWhere.value} `
+                query+=` AND ${andWhere.column} ${andWhere.operator} ? `;
+                params.push(andWhere.value);
             });
         };
         
@@ -109,7 +114,7 @@ export class ModelRepository {
         };
 
         try{
-            const [rows] = await this.mysql.query(query); 
+            const [rows] = await this.mysql.query(query, params); 
             return {
                 result: rows,
                 status: "accepted"
@@ -124,19 +129,25 @@ export class ModelRepository {
     }
 
     public async findOne(input: FindInputType){
+        const params = [];
         let query = `SELECT `;
-        input.select.map((select) => {
+
+        input.select.forEach((select) => {
             if(select.function) query+=`${select.function}(${select.column}) `
             else query+=`${select.column} `
         });
 
         query+=`\n FROM ${this.model.getName()} \n `;
 
-        if(input.where) query+=` WHERE ${input.where.column} ${input.where.operator} ${input.where.value} `;
+        if(input.where) {
+            query+=` WHERE ${input.where.column} ${input.where.operator} ? `;
+            params.push(input.where.value);
+        }
 
         if(input.andWhere) {
             input.andWhere.forEach((andWhere) => {
-                query+=` AND ${andWhere.column} ${andWhere.operator} ${andWhere.value} `
+                query+=` AND ${andWhere.column} ${andWhere.operator} ? `;
+                params.push(andWhere.value);
             });
         };
         
@@ -146,10 +157,11 @@ export class ModelRepository {
                 query+=` ${order.column} ${order.sort} `
             });
         };
+
         query+= `\n LIMIT 1`;
 
         try{
-            const [rows] = await this.mysql.query(query); 
+            const [rows] = await this.mysql.query(query, params); 
             return {
                 result: rows,
                 status: "accepted"
@@ -198,7 +210,7 @@ export class ModelRepository {
         query += `)`;
 
         try{
-           await this.mysql.query(query, params); 
+            await this.mysql.query(query, params); 
         }catch(err){
             console.error(err);
         }
@@ -207,21 +219,24 @@ export class ModelRepository {
     }
 
     public async update(input: UpdateInputType): Promise<QueryOutputType> {
+        const params: any = [];
         let query = `UPDATE ${this.model.getName()} \n SET `;
         input.set.map((set) => {
-          query += `${set.column} = ${this.mysql.escape(set.value)}, `;
+          query += `${set.column} = ?, `;
+          params.push(set.value);
         });
         query = query.slice(0, -2);
       
         if (input.where) {
           query += `\n WHERE `;
           input.where.map((where) => {
-            query += ` ${where.column} ${where.operator} ${this.mysql.escape(where.value)} `;
+            query += ` ${where.column} ${where.operator} ? `;
+            params.push(where.value);
           });
         }
       
         try {
-          const [rows] = await this.mysql.query(query);
+          const [rows] = await this.mysql.query(query, params);
           return {
             result: rows,
             status: "accepted",

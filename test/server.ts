@@ -25,8 +25,8 @@ const mysql = new DatabaseController({
 const userRepo = mysql.getModelRepository(new User());
 
 const user = new User();
-user.name.setValue("Francesco");
-user.age.setValue(5);
+user.name.setValue("Giovanni");
+user.age.setValue(17);
 /*userRepo.save(user)
     .then((_) => console.log("Saving completed"))
     .catch((err) => console.error(err));*/
@@ -39,10 +39,15 @@ userRepo.find({
     select: [{
         column: "name"
     }],
-    where: [{
+    where: {
         column: "id",
         operator: "=",
-        value: 2
+        value: 3
+    },
+    andWhere: [{
+        column: "name",
+        operator: "=",
+        value: "Giovanni"
     }]
 })
 .then((data) => console.log(data))
