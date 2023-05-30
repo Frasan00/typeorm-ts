@@ -65,7 +65,7 @@ export abstract class Entity {
           })}
         `;
 
-    if (this.primary_key) query += `\n PRIMARY KEY (${this.primary_key}) `;
+    if (this.primary_key) query += `\n PRIMARY KEY (${this.primary_key.getName()}) `;
 
     if (this.foreign_keys && this.foreign_keys.length > 0) {
       this.foreign_keys.forEach(([keyName, entityName]) => {
@@ -74,7 +74,13 @@ export abstract class Entity {
     }
 
     query += "\n);";
-    // TO DO query modification
+    
+    // Updates the table with latest changes
+    query+=` ALTER TABLE ${this.entityName} IF EXISTS`;
+
+
+
+    
 
     return query;
   }

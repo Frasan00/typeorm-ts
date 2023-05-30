@@ -18,7 +18,7 @@ export class User extends Entity {
         this.name = new Column({ name: "name", type: "VARCHAR(30)", constraints: { NOT_NULL: true } });
         this.age = new Column({ name: "age", type: "INTEGER(30)"});
 
-        this.primary_key = [this.id];
+        this.primary_key = this.id;
 
         this.addColumns(this.id, this.name, this.age);
         

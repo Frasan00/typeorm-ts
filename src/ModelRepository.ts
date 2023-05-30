@@ -94,6 +94,17 @@ export class ModelRepository {
 
         query+=`\n FROM ${this.model.getName()} table1 \n `;
 
+        if(input.joinAll){
+            const primary_key = this.model.getEntityInfo().primary_key;
+            const foreign_keys = this.model.getEntityInfo().foreign_keys;
+            if(!foreign_keys) throw new Error("There are no relations for the entity "+this.model.getName());
+            if(!primary_key) throw new Error("There is no primary key for the entity "+this.model.getName());
+
+            foreign_keys.forEach((relation) => {
+                query+=` \n LEFT JOIN ${relation[0]} table2 ON table1.${primary_key.getName()} = table2.${relation[1]}`;
+            });
+        };
+
         if(input.where) {
             query+=` WHERE ${input.where.column} ${input.where.operator} ? `;
             params.push(input.where.value);
@@ -103,17 +114,6 @@ export class ModelRepository {
             input.andWhere.forEach((andWhere) => {
                 query+=` AND ${andWhere.column} ${andWhere.operator} ? `;
                 params.push(andWhere.value);
-            });
-        };
-
-        if(input.joinAll){
-            const primary_key = this.model.getEntityInfo().primary_key;
-            const foreign_keys = this.model.getEntityInfo().foreign_keys;
-            if(!foreign_keys) throw new Error("There are no relations for the entity "+this.model.getName());
-            if(!primary_key) throw new Error("There is no primary key for the entity "+this.model.getName());
-
-            foreign_keys.forEach((relation) => {
-                query+=` \n LEFT JOIN ${relation[0]} table2 ON table1.${primary_key} = table2.${relation[1]}`;
             });
         };
         
@@ -149,6 +149,17 @@ export class ModelRepository {
         });
 
         query+=`\n FROM ${this.model.getName()} \n `;
+
+        if(input.joinAll){
+            const primary_key = this.model.getEntityInfo().primary_key;
+            const foreign_keys = this.model.getEntityInfo().foreign_keys;
+            if(!foreign_keys) throw new Error("There are no relations for the entity "+this.model.getName());
+            if(!primary_key) throw new Error("There is no primary key for the entity "+this.model.getName());
+
+            foreign_keys.forEach((relation) => {
+                query+=` \n LEFT JOIN ${relation[0]} table2 ON table1.${primary_key.getName()} = table2.${relation[1]}`;
+            });
+        };
 
         if(input.where) {
             query+=` WHERE ${input.where.column} ${input.where.operator} ? `;
