@@ -33,7 +33,8 @@ type OrderByType = {
 
 type FindInputType = {
     select: SelectType[];
-    where?: WhereConditionType[];
+    where?: WhereConditionType;
+    andWhere?: WhereConditionType[]
     // relations to do
     orderBy?: OrderByType[];
 };
@@ -65,6 +66,9 @@ export class ModelRepository {
     }
 
     public async find(input?: FindInputType){
+        // basic logic condition
+        if(input?.andWhere && !input?.where) throw new Error("You can't use andWhere without a base where condition");
+
         if (!input){
             try{
                 const [rows] = await this.mysql.query(`SELECT * FROM ${this.model.getName()}`); 
@@ -82,23 +86,23 @@ export class ModelRepository {
         };
 
         let query = `SELECT `;
-        input.select.map((select) => {
+        input.select.forEach((select) => {
             if(select.function) query+=`${select.function}(${select.column}) `
             else query+=`${select.column} `
         });
 
         query+=`\n FROM ${this.model.getName()} \n `;
 
-        if(input.where) {
-            query+="Where";
-            input.where.map((where) => {
-                query+=` ${where.column} ${where.operator} ${where.value} `;
+        if(input.where) query+=` WHERE ${input.where.column} ${input.where.operator} ${input.where.value} `;
+
+        if(input.andWhere) {
+            input.andWhere.forEach((andWhere) => {
+                query+=` AND ${andWhere.column} ${andWhere.operator} ${andWhere.value} `
             });
-            query+="\n"
         };
         
         if(input.orderBy) {
-            query+=`ORDER BY `;
+            query+=`\n ORDER BY `;
             input.orderBy.map((order) => {
                 query+=` ${order.column} ${order.sort} `
             });
@@ -128,16 +132,16 @@ export class ModelRepository {
 
         query+=`\n FROM ${this.model.getName()} \n `;
 
-        if(input.where) {
-            query+="Where";
-            input.where.map((where) => {
-                query+=` ${where.column} ${where.operator} ${where.value} `;
+        if(input.where) query+=` WHERE ${input.where.column} ${input.where.operator} ${input.where.value} `;
+
+        if(input.andWhere) {
+            input.andWhere.forEach((andWhere) => {
+                query+=` AND ${andWhere.column} ${andWhere.operator} ${andWhere.value} `
             });
-            query+="\n"
         };
         
         if(input.orderBy) {
-            query+=`ORDER BY `;
+            query+=`\n ORDER BY `;
             input.orderBy.map((order) => {
                 query+=` ${order.column} ${order.sort} `
             });
