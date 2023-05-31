@@ -30,6 +30,8 @@ services:
       MYSQL_PORT: 3306
     ports:
       - "5000:5000"
+    depends_on:
+      - database
 
 volumes:
   my-db:

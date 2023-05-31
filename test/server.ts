@@ -40,16 +40,9 @@ userRepo.find({
         column: "name"
     }],
     where: {
-        column: "id",
-        operator: "=",
-        value: 3
-    },
-    chainedWhere: [{
-        logicOperator: "AND",
-        column: "name",
-        operator: "=",
-        value: "Giovanni"
-    }]
+        id: 3,
+        name: "Giovanni"
+    }
 })
 .then((data) => console.log(data))
 .catch((err) => {}) ;

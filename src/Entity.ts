@@ -65,18 +65,18 @@ export abstract class Entity {
           })}
         `;
 
-    if (this.primary_key) query += `\n PRIMARY KEY (${this.primary_key.getName()}) `;
+    if (this.primary_key) query += `\n ,PRIMARY KEY (${this.primary_key.getName()}) `;
 
     if (this.foreign_keys && this.foreign_keys.length > 0) {
       this.foreign_keys.forEach(([keyName, entityName]) => {
-        query += `\nFOREIGN KEY (${keyName}) REFERENCES ${entityName}(${keyName}) `;
+        query += `\n,FOREIGN KEY (${keyName}) REFERENCES ${entityName}(${keyName}) `;
       });
     }
 
     query += "\n);";
     
     // Updates the table with latest changes to do
-    query+=` ALTER TABLE ${this.entityName} IF EXISTS`;
+    // query+=` ALTER TABLE ${this.entityName} `;
 
     
 

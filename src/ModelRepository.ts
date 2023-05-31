@@ -9,21 +9,12 @@ interface IModelRepositoryInput {
 
 type ColumnNameType = string;
 
-type OperatorType = "=" | "<" | ">" | "<=" | ">=" | "LIKE";
+// type OperatorType = "=" | "<" | ">" | "<=" | ">=" | "LIKE";
 
-type FunctionsType = `COUNT(${string})` | `SUM(${string})` | `DISTINCT(${string})` | `MIN(${string})` | `MAX(${string})` | `AVG(${string})`
+type FunctionsType = `COUNT(${string})` | `SUM(${string})` | `DISTINCT(${string})` | `MIN(${string})` | `MAX(${string})` | `AVG(${string})`;
 
 type WhereConditionType = {
-    column: ColumnNameType;
-    operator?: OperatorType | `=`;
-    value: any;
-};
-
-type ChainWhereConditionType = {
-    logicOperator: "AND" | "OR";
-    column: ColumnNameType;
-    operator?: OperatorType | `=`;
-    value: any;
+    [column: string]: any
 };
 
 type SelectType = {
@@ -41,7 +32,6 @@ type OrderByType = {
 type FindInputType = {
     select: SelectType[];
     where?: WhereConditionType;
-    chainedWhere?: ChainWhereConditionType[];
     joinAll?: Boolean | undefined;
     orderBy?: OrderByType[];
 };
@@ -73,9 +63,6 @@ export class ModelRepository {
     }
 
     public async find(input?: FindInputType){
-        // basic logic condition
-        if(input?.chainedWhere && !input?.where) throw new Error("You can't chain operations without a base where condition");
-
         const params = [];
         if (!input){
             try{
@@ -113,23 +100,19 @@ export class ModelRepository {
         };
 
         if(input.where) {
-            query+=` WHERE ${input.where.column} ${input.where.operator} ? `;
-            params.push(input.where.value);
-        }
-
-        if(input.chainedWhere) {
-            input.chainedWhere.forEach((chainedWhere) => {
-                switch (chainedWhere.logicOperator) {
-                    case "AND":
-                        query+=` AND ${chainedWhere.column} ${chainedWhere.operator} ? `;
-                        params.push(chainedWhere.value);
-                    case "OR":
-                        query+=` OR ${chainedWhere.column} ${chainedWhere.operator} ? `;
-                        params.push(chainedWhere.value);
-                    default:
-                        throw new Error("Invalid logical operator in chained where condition");
+            const columns = Object.keys(input.where);
+            const values = Object.values(input.where); 
+            
+            for (let i = 0; i<columns.length; i++){
+                if (i>0){
+                    query+=` AND ${columns[i]} = ? `
+                    params.push(values[i]);
                 }
-            });
+                else{
+                    query+=` WHERE ${columns[i]} = ? `
+                    params.push(values[i]);
+                }
+            };
         };
         
         if(input.orderBy) {
@@ -177,23 +160,19 @@ export class ModelRepository {
         };
 
         if(input.where) {
-            query+=` WHERE ${input.where.column} ${input.where.operator} ? `;
-            params.push(input.where.value);
-        }
-
-        if(input.chainedWhere) {
-            input.chainedWhere.forEach((chainedWhere) => {
-                switch (chainedWhere.logicOperator) {
-                    case "AND":
-                        query+=` AND ${chainedWhere.column} ${chainedWhere.operator} ? `;
-                        params.push(chainedWhere.value);
-                    case "OR":
-                        query+=` OR ${chainedWhere.column} ${chainedWhere.operator} ? `;
-                        params.push(chainedWhere.value);
-                    default:
-                        throw new Error("Invalid logical operator in chained where condition");
+            const columns = Object.keys(input.where);
+            const values = Object.values(input.where); 
+            
+            for (let i = 0; i<columns.length; i++){
+                if (i>0){
+                    query+=` AND ${columns[i]} = ? `
+                    params.push(values[i]);
                 }
-            });
+                else{
+                    query+=` WHERE ${columns[i]} = ? `
+                    params.push(values[i]);
+                };
+            };
         };
         
         if(input.orderBy) {
