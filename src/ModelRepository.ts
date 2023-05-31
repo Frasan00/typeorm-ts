@@ -1,9 +1,9 @@
 import mysql from "mysql2/promise"; 
 import { Entity } from "./Entity";
+import { QueryBuilder } from "./QueryBuilder";
 
 interface IModelRepositoryInput {
     readonly model: Entity,
-    readonly db_name: string,
     mysql: mysql.Pool,
 }
 
@@ -53,11 +53,9 @@ type UpdateInputType = {
 
 export class ModelRepository {
     protected model: Entity;
-    protected db_name: string;
     protected mysql: mysql.Pool;
 
     public constructor(input: IModelRepositoryInput){
-        this.db_name = input.db_name;
         this.model = input.model;
         this.mysql = input.mysql;
     }
@@ -292,4 +290,11 @@ export class ModelRepository {
             }
         }
     }
+
+    public createQueryBuilder(model: Entity): QueryBuilder{
+        return new QueryBuilder({
+            model: model,
+            mysql: this.mysql 
+        });
+    };
 }

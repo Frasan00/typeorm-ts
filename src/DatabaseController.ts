@@ -1,6 +1,7 @@
 import mysql, { Pool } from "mysql2/promise";
 import { Entity } from "./Entity";
 import { ModelRepository } from "./ModelRepository";
+import { QueryBuilder } from "./QueryBuilder";
 
 interface IDatabaseController {
     readonly host: string,
@@ -62,10 +63,8 @@ export class DatabaseController {
 
     public getModelRepository(model: Entity): ModelRepository {
         return new ModelRepository({
-            db_name: this.db_name, 
             model: model, 
-            mysql: this.mysql 
+            mysql: this.mysql
         }); 
     }
-
 }
