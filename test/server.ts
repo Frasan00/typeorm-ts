@@ -19,10 +19,10 @@ const mysql = new DatabaseController({
     user_name: process.env.MYSQL_USER || "admin",
     password: process.env.MYSQL_PASSWORD || "password",
     port: port,
-    entities: [new User()]
+    entities: [User]
 });
 
-const userRepo = mysql.getModelRepository(new User());
+const userRepo = mysql.getModelRepository(User);
 
 const user = new User();
 user.name.setValue("Giovanni");
@@ -47,7 +47,7 @@ userRepo.find({
 .then((data) => console.log(data))
 .catch((err) => {}) ;
 
-const query = userRepo.createQueryBuilder(new User())
+const query = userRepo.createQueryBuilder()
 .where();
 
 app.listen(PORT, () => console.log("Listening on port "+PORT))

@@ -26,19 +26,15 @@ export abstract class Entity {
     return this.entityName;
   }
 
-  public getEntityInfo(){
+  public getEntityInfo() {
     const columns = this.columns;
     const primary_key = this.primary_key;
     const foreign_keys = this.foreign_keys;
-    return { columns, primary_key, foreign_keys }
-  }
-
-  protected addColumn(column: Column) {
-    this.columns.push(column);
+    return { columns, primary_key, foreign_keys };
   }
 
   protected addColumns(...columns: Column[]) {
-    columns.map((column) => this.columns.push(column));
+    this.columns.push(...columns);
   }
 
   public initializeColumns() {
@@ -74,11 +70,6 @@ export abstract class Entity {
     }
 
     query += "\n);";
-    
-    // Updates the table with latest changes to do
-    // query+=` ALTER TABLE ${this.entityName} `;
-
-    
 
     return query;
   }

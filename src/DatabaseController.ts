@@ -1,7 +1,6 @@
 import mysql, { Pool } from "mysql2/promise";
 import { Entity } from "./Entity";
 import { ModelRepository } from "./ModelRepository";
-import { QueryBuilder } from "./QueryBuilder";
 
 interface IDatabaseController {
     readonly host: string,
@@ -9,14 +8,13 @@ interface IDatabaseController {
     readonly user_name: string,
     readonly password: string,
     readonly port?: number,
-    readonly entities: Entity[]
+    readonly entities: Array<new () => Entity>,
 }
 
 
 export class DatabaseController {
     protected mysql: Pool;
-    protected entities: Entity[];
-    protected db_name: string;
+    protected entities: Array<new () => Entity>;
 
     public constructor(input: IDatabaseController){
         this.mysql = mysql.createPool({
@@ -29,39 +27,45 @@ export class DatabaseController {
         this.connection()
             .then((_) => console.log("Connected to the database on port: "+input.port || 3306))
             .catch((err) => console.error(err));
-        
-        this.db_name = input.db_name;
 
         // entities initialization
         this.entities = input.entities;
-        this.processEntities(this.entities);
+        this.processEntities();
     }
 
     private async connection(){
-        await this.mysql.getConnection()
+        await this.mysql.getConnection();
     }
 
-    protected async processEntities(entities: Entity[]){
-        if(this.entities.length === 0) throw new Error(`There are no entities to initialize`);
-        const promises = entities.map(async (entity) => {
-            const query: string = entity.initializeColumns();
-            if(!query) throw new Error(`Error while creating the query for Entity: ${entity.getName()}`);
+    public async processEntities() {
+        if (this.entities.length === 0) throw new Error(`There are no entities to initialize`);
+        const promises = this.entities.map(async (entity) => {
+
+            const entityInstance = new entity();
+
+            if (!(entityInstance instanceof Entity)) {
+              throw new Error(`Entity class "${entity.name}" does not extend the Entity base class`);
+            }
+
+            const query: string = entityInstance.initializeColumns();
+            if (!query) throw new Error(`Error while creating the query for Entity: ${entity.name}`);
             console.log(query);
+
             try {
                 await this.mysql.query(query);
-            }catch(err){
+            } catch (err) {
                 console.error(err);
             }
-        });
-
-        try{
+            });
+        
+            try {
             await Promise.all(promises);
-        }catch(err){
+            } catch (err) {
             console.error(err);
-        }
-    }
+            }
+      }
 
-    public getModelRepository(model: Entity): ModelRepository {
+    public getModelRepository(model: new () => Entity): ModelRepository {
         return new ModelRepository({
             model: model, 
             mysql: this.mysql

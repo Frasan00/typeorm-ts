@@ -3,7 +3,7 @@ import { Entity } from "./Entity";
 import { QueryBuilder } from "./QueryBuilder";
 
 interface IModelRepositoryInput {
-    readonly model: Entity,
+    readonly model: new () =>  Entity,
     mysql: mysql.Pool,
 }
 
@@ -56,7 +56,7 @@ export class ModelRepository {
     protected mysql: mysql.Pool;
 
     public constructor(input: IModelRepositoryInput){
-        this.model = input.model;
+        this.model = new input.model();
         this.mysql = input.mysql;
     }
 
@@ -89,8 +89,8 @@ export class ModelRepository {
         if(input.joinAll){
             const primary_key = this.model.getEntityInfo().primary_key;
             const foreign_keys = this.model.getEntityInfo().foreign_keys;
-            if(!foreign_keys) throw new Error("There are no relations for the entity "+this.model.getName());
-            if(!primary_key) throw new Error("There is no primary key for the entity "+this.model.getName());
+            if(!foreign_keys) throw new Error("There are no relations for the entity "+process.env.MYSQL_DATABASE);
+            if(!primary_key) throw new Error("There is no primary key for the entity "+process.env.MYSQL_DATABASE);
 
             foreign_keys.forEach((relation) => {
                 query+=` \n LEFT JOIN ${relation[0]} table2 ON table1.${primary_key.getName()} = table2.${relation[1]}`;
@@ -149,8 +149,8 @@ export class ModelRepository {
         if(input.joinAll){
             const primary_key = this.model.getEntityInfo().primary_key;
             const foreign_keys = this.model.getEntityInfo().foreign_keys;
-            if(!foreign_keys) throw new Error("There are no relations for the entity "+this.model.getName());
-            if(!primary_key) throw new Error("There is no primary key for the entity "+this.model.getName());
+            if(!foreign_keys) throw new Error("There are no relations for the entity "+process.env.MYSQL_DATABASE);
+            if(!primary_key) throw new Error("There is no primary key for the entity "+process.env.MYSQL_DATABASE);
 
             foreign_keys.forEach((relation) => {
                 query+=` \n LEFT JOIN ${relation[0]} table2 ON table1.${primary_key.getName()} = table2.${relation[1]}`;
@@ -215,8 +215,8 @@ export class ModelRepository {
     }
 
     public async save(entity: Entity): Promise<Entity>{
-        if(entity.getName() !== this.model.getName()) throw new Error(`Invalid enitity for repository ${this.model.getName()}`);
         const params: any[] = [];
+
         let query = `INSERT INTO ${this.model.getName()}(`;
         entity.getEntityInfo().columns.map((column) => {
             query += column.getName()+",";
@@ -291,9 +291,9 @@ export class ModelRepository {
         }
     }
 
-    public createQueryBuilder(model: Entity): QueryBuilder{
+    public createQueryBuilder(): QueryBuilder{
         return new QueryBuilder({
-            model: model,
+            model: this.model,
             mysql: this.mysql 
         });
     };
