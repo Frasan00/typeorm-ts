@@ -9,7 +9,7 @@ interface IDatabaseController {
     readonly password: string,
     readonly port?: number,
     readonly entities: Array<new () => Entity>,
-}
+};
 
 
 export class DatabaseController {

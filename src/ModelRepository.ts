@@ -37,19 +37,23 @@ type FindInputType = {
 };
 
 type QueryOutputType = {
-    result: any
-    status: "accepted" | "refused"; 
+    result: any;
+    status: "accepted" | "refused";
+    query: string;
+    params: any;
 };
 
 type SetType = {
     column: ColumnNameType;
     value: any;
-}
+};
 
 type UpdateInputType = {
     set: SetType[],
     where?: WhereConditionType[]
-}
+};
+
+/* TO DO: GROUP BY */
 
 export class ModelRepository {
     protected model: Entity;
@@ -67,13 +71,17 @@ export class ModelRepository {
                 const [rows] = await this.mysql.query(`SELECT * FROM ${this.model.getName()}`); 
                 return {
                     result: rows,
-                    status: "accepted"
+                    status: "accepted",
+                    query: `SELECT * FROM ${this.model.getName()}`,
+                    params: null
                 }
             }catch(err){
                 console.error(err);
                 return {
                     result: err,
-                    status: "refused"
+                    status: "refused",
+                    query: `SELECT * FROM ${this.model.getName()}`,
+                    params: null
                 }
             }
         };
@@ -93,23 +101,20 @@ export class ModelRepository {
             if(!primary_key) throw new Error("There is no primary key for the entity "+process.env.MYSQL_DATABASE);
 
             foreign_keys.forEach((relation) => {
-                query+=` \n LEFT JOIN ${relation[0]} table2 ON table1.${primary_key.getName()} = table2.${relation[1]}`;
+                query+=` \n LEFT JOIN ${relation[0]} table2 ON table1.${primary_key.getName()} = table2.${relation[1]} `;
             });
+            query+=" \n ";
         };
 
         if(input.where) {
+            query+=` WHERE 1=1 `; // flag always true
+
             const columns = Object.keys(input.where);
             const values = Object.values(input.where); 
             
             for (let i = 0; i<columns.length; i++){
-                if (i>0){
-                    query+=` AND ${columns[i]} = ? `
-                    params.push(values[i]);
-                }
-                else{
-                    query+=` WHERE ${columns[i]} = ? `
-                    params.push(values[i]);
-                }
+                query+=` AND ${columns[i]} = ? `
+                params.push(values[i]);
             };
         };
         
@@ -124,13 +129,17 @@ export class ModelRepository {
             const [rows] = await this.mysql.query(query, params); 
             return {
                 result: rows,
-                status: "accepted"
+                status: "accepted",
+                query: query,
+                params: params,
             }
         }catch(err){
             console.error(err);
             return {
                 result: err,
-                status: "refused"
+                status: "refused",
+                query: query,
+                params: params,
             }
         }
     }
@@ -155,21 +164,19 @@ export class ModelRepository {
             foreign_keys.forEach((relation) => {
                 query+=` \n LEFT JOIN ${relation[0]} table2 ON table1.${primary_key.getName()} = table2.${relation[1]}`;
             });
+
+            query+=" \n ";
         };
 
         if(input.where) {
+            query+=` WHERE 1=1 `;
+
             const columns = Object.keys(input.where);
             const values = Object.values(input.where); 
             
             for (let i = 0; i<columns.length; i++){
-                if (i>0){
-                    query+=` AND ${columns[i]} = ? `
-                    params.push(values[i]);
-                }
-                else{
-                    query+=` WHERE ${columns[i]} = ? `
-                    params.push(values[i]);
-                };
+                query+=` AND ${columns[i]} = ? `
+                params.push(values[i]);
             };
         };
         
@@ -186,13 +193,17 @@ export class ModelRepository {
             const [rows] = await this.mysql.query(query, params); 
             return {
                 result: rows,
-                status: "accepted"
+                status: "accepted",
+                query: query,
+                params: params,
             }
         }catch(err){
             console.error(err);
             return {
                 result: err,
-                status: "refused"
+                status: "refused",
+                query: query,
+                params: params,
             }
         }
     }
@@ -203,13 +214,17 @@ export class ModelRepository {
             const [rows] = await this.mysql.query(query, input.id); 
             return {
                 result: rows,
-                status: "accepted"
+                status: "accepted",
+                query: query,
+                params: input.id,
             }
         }catch(err){
             console.error(err);
             return {
                 result: err,
-                status: "refused"
+                status: "refused",
+                query: query,
+                params: input.id
             }
         }
     }
@@ -262,12 +277,16 @@ export class ModelRepository {
           return {
             result: rows,
             status: "accepted",
+            query: query,
+            params: params,
           };
         } catch (err) {
           console.error(err);
           return {
             result: err,
             status: "refused",
+            query: query,
+            params: params,
           };
         }
       }
@@ -280,13 +299,17 @@ export class ModelRepository {
             const [rows] = await this.mysql.query(query, input.id); 
             return {
                 result: rows,
-                status: "accepted"
+                status: "accepted",
+                query: `DELETE FROM ${this.model.getName()} WHERE id = ?`,
+                params: input.id,
             }
         }catch(err){
             console.error(err);
             return {
                 result: err,
-                status: "refused"
+                status: "refused",
+                query: `DELETE FROM ${this.model.getName()} WHERE id = ?`,
+                params: input.id,
             }
         }
     }

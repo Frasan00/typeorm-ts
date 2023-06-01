@@ -21,8 +21,14 @@ type GetQueryResultType = {
 };
 
 type QueryOutputType = {
-    result: any
+    result: any;
     status: "accepted" | "refused"; 
+    query: string;
+    params: any;
+};
+
+type WhereTypeInput = {
+
 };
 
 export class QueryBuilder {
@@ -30,14 +36,45 @@ export class QueryBuilder {
     protected model: Entity;
     protected mysql: mysql.Pool;
     protected query: string;
+    protected params: any[];
+    protected condition: boolean; // says if there is at least a condition in the query builder
+    protected openBracket: boolean; // this orm only supports simple not nested brackets
 
     public constructor(input: IQueryBuilderInput){
         this.model = input.model;
         this.mysql = input.mysql;
-        this.query = `SELECT * FROM ${this.model.getName()} table.1 \n`;
+        this.condition  = false;
+        this.openBracket = false;
+        this.query = `SELECT * FROM ${this.model.getName()} table.1 \n `;
+        this.params = [];
     };
 
-    public where(): QueryBuilder{
+    public notNull(): QueryBuilder{
+
+        return this;
+    };
+
+    public brackets(): QueryBuilder{
+
+        return this;
+    };
+
+    public andWhere(): QueryBuilder{
+
+        return this;
+    };
+
+    public orWhere(): QueryBuilder{
+
+        return this;
+    };
+
+    public leftJoin(): QueryBuilder{
+
+        return this;
+    };
+
+    public innerJoin(): QueryBuilder{
 
         return this;
     };
@@ -56,13 +93,17 @@ export class QueryBuilder {
             const [rows] = await this.mysql.query(`SELECT * FROM ${this.model.getName()}`); 
             return {
                 result: rows,
-                status: "accepted"
+                status: "accepted",
+                query: this.query,
+                params: this.params,
             }
         }catch(err){
             console.error(err);
             return {
                 result: err,
-                status: "refused"
+                status: "refused",
+                query: this.query,
+                params: this.params,
             }
         }
     };

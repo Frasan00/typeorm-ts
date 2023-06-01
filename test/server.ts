@@ -48,6 +48,6 @@ userRepo.find({
 .catch((err) => {}) ;
 
 const query = userRepo.createQueryBuilder()
-.where();
+
 
 app.listen(PORT, () => console.log("Listening on port "+PORT))
