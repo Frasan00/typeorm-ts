@@ -43,7 +43,7 @@ export class QueryBuilder {
         this.mysql = input.mysql;
         this.query = `SELECT * FROM ${this.model.getName()} table.1 \n `;
         this.params = [];
-        this.whereConditions = ` \n WHERE (1=1 AND 1=1) `; // flag always true to initiate where condition
+        this.whereConditions = ` \n WHERE 1=1 AND  `; // flag always true to initiate where condition
         this.joins = ` \n `;
     };
 

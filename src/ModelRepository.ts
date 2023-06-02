@@ -9,10 +9,22 @@ interface IModelRepositoryInput {
 
 type ColumnNameType = string;
 
-type FunctionsType = `COUNT(${string})` | `SUM(${string})` | `DISTINCT(${string})` | `MIN(${string})` | `MAX(${string})` | `AVG(${string})`;
+type FunctionsType =
+   | `COUNT(${string})`
+   | `SUM(${string})`
+   | `DISTINCT(${string})`
+   | `MIN(${string})`
+   | `MAX(${string})`
+   | `AVG(${string})`;
+
+type WhereConditionsType = {
+    moreThan?: any;
+    lessThan?: any;
+    like?: any;
+};
 
 type WhereConditionType = {
-    [column: string]: any
+    [column: string]: WhereConditionsType | string | number | boolean | Date;
 };
 
 type SelectType = {
@@ -108,11 +120,26 @@ export class ModelRepository {
             query+=` WHERE 1=1 `; // flag always true
 
             const columns = Object.keys(input.where);
-            const values = Object.values(input.where); 
+            const values = Object.values(input.where);
             
             for (let i = 0; i<columns.length; i++){
-                query+=` AND ${columns[i]} = ? `
-                params.push(values[i]);
+                const column = columns[i];
+                const value = values[i];
+                if (typeof value === "object" && !(value instanceof Date)) {
+                    if(value.moreThan){
+                        query += ` AND ${column} > ? `;
+                        params.push(value.moreThan);
+                    } else if(value.lessThan){
+                        query += ` AND ${column} < ? `;
+                        params.push(value.lessThan);
+                    } else if(value.like) {
+                        query += ` AND ${column} LIKE ? `;
+                        params.push(value.like);
+                    }
+                  } else {
+                    query += ` AND ${column} = ?`;
+                    params.push(value);
+                  }
             };
         };
         
@@ -167,22 +194,30 @@ export class ModelRepository {
         };
 
         if(input.where) {
-            query+=` WHERE 1=1 `;
+            query+=` WHERE 1=1 `; // flag always true
 
             const columns = Object.keys(input.where);
-            const values = Object.values(input.where); 
+            const values = Object.values(input.where);
             
             for (let i = 0; i<columns.length; i++){
-                query+=` AND ${columns[i]} = ? `
-                params.push(values[i]);
+                const column = columns[i];
+                const value = values[i];
+                if (typeof value === "object" && !(value instanceof Date)) {
+                    if(value.moreThan){
+                        query += ` AND ${column} > ? `;
+                        params.push(value.moreThan);
+                    } else if(value.lessThan){
+                        query += ` AND ${column} < ? `;
+                        params.push(value.lessThan);
+                    } else if(value.like) {
+                        query += ` AND ${column} LIKE ? `;
+                        params.push(value.like);
+                    }
+                  } else {
+                    query += ` AND ${column} = ?`;
+                    params.push(value);
+                  }
             };
-        };
-        
-        if(input.orderBy) {
-            query+=`\n ORDER BY `;
-            input.orderBy.map((order) => {
-                query+=` ${order.column} ${order.sort} `
-            });
         };
 
         query+= `\n LIMIT 1`;

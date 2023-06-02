@@ -30,24 +30,27 @@ user.age.setValue(17);
 /*userRepo.save(user)
     .then((_) => console.log("Saving completed"))
     .catch((err) => console.error(err));*/
-userRepo.findOneById({id: 2});
-userRepo.find()
+const p1 = userRepo.findOneById({id: 2})
+.then((data) => console.log(data))
+.catch((err) => {}) ;
+const p2 = userRepo.find()
     .then((data) => console.log(data))
     .catch((err) => {}) ;
 
-userRepo.find({
+const p3 = userRepo.find({
     select: [{
         column: "name"
     }],
     where: {
         id: 3,
-        name: "Giovanni"
+        name: "Giovanni",
+        age: { moreThan: 2 }
     }
 })
 .then((data) => console.log(data))
 .catch((err) => {}) ;
 
-const query = userRepo.createQueryBuilder()
+//const query = userRepo.createQueryBuilder()
 
 
 app.listen(PORT, () => console.log("Listening on port "+PORT))
