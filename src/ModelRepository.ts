@@ -28,7 +28,7 @@ type WhereConditionType = {
 };
 
 type SelectType = {
-    column: ColumnNameType;
+    column?: ColumnNameType;
     function?: FunctionsType | undefined;
 };
 
@@ -40,7 +40,7 @@ type OrderByType = {
 };
 
 type FindInputType = {
-    select: SelectType[];
+    select?: SelectType[];
     where?: WhereConditionType;
     joinAll?: Boolean | undefined;
     orderBy?: OrderByType[];
@@ -97,10 +97,12 @@ export class ModelRepository {
         };
 
         let query = `SELECT `;
-        input.select.forEach((select) => {
-            if(select.function) query+=`${select.function}(${select.column}) `
-            else query+=`${select.column} `
-        });
+        if(input.select){
+            input.select.forEach((select) => {
+                if(select.function) query+=`${select.function}(${select.column}) `
+                else query+=`${select.column} `
+            });
+        }else query+="SELECT * ";
 
         query+=`\n FROM ${this.model.getName()} table1 \n `;
 
@@ -173,10 +175,12 @@ export class ModelRepository {
         const params = [];
         let query = `SELECT `;
 
-        input.select.forEach((select) => {
-            if(select.function) query+=`${select.function}(${select.column}) `
-            else query+=`${select.column} `
-        });
+        if(input.select){
+            input.select.forEach((select) => {
+                if(select.function) query+=`${select.function}(${select.column}) `
+                else query+=`${select.column} `
+            });
+        }else query+="SELECT * ";
 
         query+=`\n FROM ${this.model.getName()} \n `;
 

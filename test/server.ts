@@ -24,13 +24,16 @@ const mysql = new DatabaseController({
 
 const userRepo = mysql.getModelRepository(User);
 
+// user creation and saving
 const user = new User();
 user.name.setValue("Giovanni");
 user.age.setValue(17);
 /*userRepo.save(user)
     .then((_) => console.log("Saving completed"))
     .catch((err) => console.error(err));*/
-const p1 = userRepo.findOneById({id: 2})
+
+// some queries
+/*const p1 = userRepo.findOneById({id: 2})
 .then((data) => console.log(data))
 .catch((err) => {}) ;
 const p2 = userRepo.find()
@@ -48,9 +51,16 @@ const p3 = userRepo.find({
     }
 })
 .then((data) => console.log(data))
-.catch((err) => {}) ;
+.catch((err) => {}) ;*/
 
-//const query = userRepo.createQueryBuilder()
+// query builder
+const query = userRepo.createQueryBuilder()
+.openBrackets()
+.closeBrackets()
+
+query.getQueryResult()
+.then((data) => console.log(data))
+.catch((err) => {}) ;
 
 
 app.listen(PORT, () => console.log("Listening on port "+PORT))
