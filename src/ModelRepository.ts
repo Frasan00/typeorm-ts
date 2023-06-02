@@ -9,8 +9,6 @@ interface IModelRepositoryInput {
 
 type ColumnNameType = string;
 
-// type OperatorType = "=" | "<" | ">" | "<=" | ">=" | "LIKE";
-
 type FunctionsType = `COUNT(${string})` | `SUM(${string})` | `DISTINCT(${string})` | `MIN(${string})` | `MAX(${string})` | `AVG(${string})`;
 
 type WhereConditionType = {

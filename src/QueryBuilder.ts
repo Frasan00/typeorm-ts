@@ -6,6 +6,8 @@ interface IQueryBuilderInput {
     mysql: mysql.Pool
 };
 
+type OperatorType = "=" | "<" | ">" | "<=" | ">=" | "LIKE";
+
 type ColumnNameType = string;
 
 type SortType = `ASC` | `DESC`;
@@ -27,49 +29,55 @@ type QueryOutputType = {
     params: any;
 };
 
-type WhereTypeInput = {
-
-};
-
 export class QueryBuilder {
 
     protected model: Entity;
     protected mysql: mysql.Pool;
     protected query: string;
     protected params: any[];
-    protected condition: boolean; // says if there is at least a condition in the query builder
-    protected openBracket: boolean; // this orm only supports simple not nested brackets
+    protected whereConditions: string;
+    protected joins: string;
 
     public constructor(input: IQueryBuilderInput){
         this.model = input.model;
         this.mysql = input.mysql;
-        this.condition  = false;
-        this.openBracket = false;
         this.query = `SELECT * FROM ${this.model.getName()} table.1 \n `;
         this.params = [];
+        this.whereConditions = ` \n WHERE (1=1 AND 1=1) `; // flag always true to initiate where condition
+        this.joins = ` \n `;
     };
 
     public notNull(): QueryBuilder{
+        
+        return this;
+    };
+
+    public null(): QueryBuilder{
 
         return this;
     };
 
-    public brackets(): QueryBuilder{
+    public openBrackets(): QueryBuilder{
+        this.whereConditions += ` ( `;
+        return this;
+    };
+
+    public closeBrackets(): QueryBuilder {
+        this.whereConditions += ` ) `;
+        return this;
+    };
+
+    public andWhere(column: string, operator: OperatorType, value: any): QueryBuilder{
 
         return this;
     };
 
-    public andWhere(): QueryBuilder{
+    public orWhere(column: string, operator: OperatorType, value: any): QueryBuilder{
 
         return this;
     };
 
-    public orWhere(): QueryBuilder{
-
-        return this;
-    };
-
-    public leftJoin(): QueryBuilder{
+    public leftJoin(entity1: new() => Entity, entity2: new() => Entity): QueryBuilder{
 
         return this;
     };
@@ -80,6 +88,17 @@ export class QueryBuilder {
     };
 
     public async getQueryResult(input?: GetQueryResultType): Promise<QueryOutputType>{
+        this.query+=this.whereConditions;
+        this.query+=this.joins;
+        if(this.validateBrackets(this.query) === false) { 
+            return {
+                result: "Invalid brackets in the query",
+                status: "refused",
+                query: this.query,
+                params: this.params,
+            }
+        }
+
         if(input?.orderBy){
             this.query+=`\n ORDER BY `;
             input.orderBy.map((order) => {
@@ -106,5 +125,17 @@ export class QueryBuilder {
                 params: this.params,
             }
         }
+    };
+
+    private validateBrackets(input: String): boolean{
+        let count = 0;
+        for(let char in input){
+            if(char === "(") count++;
+            if(char === ")"){
+                count--;
+                if(count<0) return false
+            }
+        }
+        return true;
     };
 };
