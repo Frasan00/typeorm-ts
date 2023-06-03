@@ -24,13 +24,31 @@ const mysql = new DatabaseController({
 
 const userRepo = mysql.getModelRepository(User);
 
-// user creation and saving
+// user entity popuplation
 const user = new User();
-user.name.setValue("Giovanni");
-user.age.setValue(17);
-/*userRepo.save(user)
-    .then((_) => console.log("Saving completed"))
-    .catch((err) => console.error(err));*/
+user.name.setValue("Francesco");
+user.age.setValue(5);
+
+const user2 = new User();
+user2.name.setValue("Francesco");
+user2.age.setValue(13);
+
+const user3 = new User();
+user3.name.setValue("Giovanni");
+user3.age.setValue(17);
+
+const user4 = new User();
+user4.name.setValue("Giovanni");
+user4.age.setValue(17);
+
+/*const p1 = userRepo.save(user)
+const p2 = userRepo.save(user2)
+const p3 = userRepo.save(user3)
+const p4 = userRepo.save(user4)
+
+Promise.all([p1,p2,p3,p4])
+.then((_) => console.log("Saving completed"))
+.catch((err) => console.error(err));*/
 
 // some queries
 /*const p1 = userRepo.findOneById({id: 2})
@@ -53,7 +71,10 @@ const p3 = userRepo.find({
 .then((data) => console.log(data))
 .catch((err) => {}) ;*/
 
-userRepo.find({ select: [{ column: "id", function: "COUNT" }] })
+/*userRepo.find({ select: [{ column: "id", function: "COUNT" }] })
+.then((_) => console.log(_))*/
+
+
 
 // query builder
 const query = userRepo.createQueryBuilder()

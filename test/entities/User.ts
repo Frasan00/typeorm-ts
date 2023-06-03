@@ -14,14 +14,13 @@ export class User extends Entity {
             columns: [],
         });
 
-        this.id = new Column({ name: "id", type: "INTEGER(30)", constraints: { NOT_NULL: true, AUTO_INCREMENT: true } });
-        this.name = new Column({ name: "name", type: "VARCHAR(30)", constraints: { NOT_NULL: true } });
-        this.age = new Column({ name: "age", type: "INTEGER(30)"});
+        this.id = new Column({ name: "id", type: "INTEGER", constraints: { NOT_NULL: true, AUTO_INCREMENT: true } });
+        this.name = new Column({ name: "name", type: "STRING", constraints: { NOT_NULL: true } });
+        this.age = new Column({ name: "age", type: "INTEGER"});
 
         this.primary_key = this.id;
 
         this.addColumns(this.id, this.name, this.age);
-        
     }
 
 }

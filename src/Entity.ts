@@ -47,7 +47,7 @@ export abstract class Entity {
         ${this.columns
           .map((column) => {
             const columnName = column.getName();
-            const type: ColumnType = column.getConf().type;
+            const type = this.selectType(column.getConf().type, column.getConf().typeLength);
             const constraints = column.getConf().constraints;
             if (!constraints) return `${columnName} ${type}`;
 
@@ -72,5 +72,27 @@ export abstract class Entity {
     query += "\n);";
 
     return query;
+  }
+
+  private selectType(input: string, length: number): string{
+    switch(input){
+      case "STRING":
+        return `VARCHAR(${length})`;
+
+      case "INTEGER":
+        return `INTEGER(${length})`;
+
+      case "FLOAT":
+        return `FLOAT(${length})`;
+
+      case "BOOLEAN":
+        return `BOOLEAN(${length})`;
+
+      case "DATE":
+        return `DATE`;
+      
+      default:
+        return "Invalid type for the input type "+input+" for the entity "+this.entityName;
+    }
   }
 }
