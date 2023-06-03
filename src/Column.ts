@@ -1,4 +1,15 @@
-export type ColumnType = `VARCHAR(${number})` | `CHAR(${number})` | `TEXT(${number})` | `BLOB(${number})` | `ENUM<${string}>` | `ENUM<${any}>` | `BIT(${number})` | `INTEGER(${number})` | `BOOLEAN(${number})` | `FLOAT(${number})` | `DATE` | "YEAR";
+export type ColumnType = 
+    `VARCHAR(${number})` 
+    | `CHAR(${number})` 
+    | `TEXT(${number})` 
+    | `BLOB(${number})` 
+    | `ENUM<${string}>` 
+    | `ENUM<${any}>` 
+    | `BIT(${number})` 
+    | `INTEGER(${number})` 
+    | `BOOLEAN(${number})` 
+    | `FLOAT(${number})` 
+    | `DATE`;
 
 export type ConstraintsType = {
     NOT_NULL?: boolean | false;

@@ -53,10 +53,11 @@ const p3 = userRepo.find({
 .then((data) => console.log(data))
 .catch((err) => {}) ;*/
 
+userRepo.find({ select: [{ column: "id", function: "COUNT" }] })
+
 // query builder
 const query = userRepo.createQueryBuilder()
-.openBrackets()
-.closeBrackets()
+.where("id", "=", { value: 1 })
 
 query.getQueryResult()
 .then((data) => console.log(data))

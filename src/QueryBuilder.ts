@@ -37,14 +37,16 @@ export class QueryBuilder {
     protected params: any[];
     protected whereConditions: string;
     protected joins: string;
+    protected firstCondition: boolean;
 
     public constructor(input: IQueryBuilderInput){
         this.model = input.model;
         this.mysql = input.mysql;
         this.query = `SELECT * FROM ${this.model.getName()} table.1 \n `;
         this.params = [];
-        this.whereConditions = ` \n WHERE 1=1 AND  `; // flag always true to initiate where condition
+        this.whereConditions = ``; // flag always true to initiate where condition
         this.joins = ` \n `;
+        this.firstCondition = true;
     };
 
     public notNull(): QueryBuilder{
@@ -67,13 +69,25 @@ export class QueryBuilder {
         return this;
     };
 
-    public andWhere(column: string, operator: OperatorType, value: any): QueryBuilder{
-
+    public where(column: string, operator: OperatorType, valueInput: {value: any}): QueryBuilder{
+        if(this.firstCondition === false) throw new Error("Where can only be used as the first condition");
+        this.whereConditions+=` WHERE ${column} ${operator} ?` ;
+        this.params.push(valueInput.value);
+        this.firstCondition = false;
         return this;
     };
 
-    public orWhere(column: string, operator: OperatorType, value: any): QueryBuilder{
+    public andWhere(column: string, operator: OperatorType, valueInput: {value: any}): QueryBuilder{
+        if(this.firstCondition === true) throw new Error("andWhere can only be used as a chain for others conditions");
+        this.whereConditions+=` AND ${column} ${operator} ?` ;
+        this.params.push(valueInput.value);
+        return this;
+    };
 
+    public orWhere(column: string, operator: OperatorType, valueInput: {value: any}): QueryBuilder{
+        if(this.firstCondition === true) throw new Error("orWhere can only be used as a chain for others conditions");
+        this.whereConditions+=` OR ${column} ${operator} ?` ;
+        this.params.push(valueInput.value);
         return this;
     };
 

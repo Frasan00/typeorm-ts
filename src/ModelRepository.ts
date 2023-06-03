@@ -10,12 +10,12 @@ interface IModelRepositoryInput {
 type ColumnNameType = string;
 
 type FunctionsType =
-   | `COUNT(${string})`
-   | `SUM(${string})`
-   | `DISTINCT(${string})`
-   | `MIN(${string})`
-   | `MAX(${string})`
-   | `AVG(${string})`;
+   | `COUNT`
+   | `SUM`
+   | `DISTINCT`
+   | `MIN`
+   | `MAX`
+   | `AVG`;
 
 type WhereConditionsType = {
     moreThan?: any;
