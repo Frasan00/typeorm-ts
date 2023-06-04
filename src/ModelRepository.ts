@@ -112,11 +112,17 @@ export class ModelRepository {
             if(!foreign_keys) throw new Error("There are no relations for the entity "+process.env.MYSQL_DATABASE);
             if(!primary_key) throw new Error("There is no primary key for the entity "+process.env.MYSQL_DATABASE);
 
-            foreign_keys.forEach(([entityName, foreignKey, _]) => {
-                query+=` \n LEFT JOIN ${entityName} table2 ON table1.${foreignKey} = table2.${primary_key.getName()}`;
+            let i = 2;
+            foreign_keys.forEach(([entityName, foreignKey, entityId, RelationType]) => {
+                if(RelationType === "OneToOne"){
+                    query+=` \n LEFT JOIN ${entityName} table${i} ON table1.${foreignKey} = table${i}.${primary_key.getName()}`;
+                    i++;
+                }
+                else if(RelationType === "OneToMany"){
+                    query+=` \n LEFT JOIN ${entityName} table${i} ON table1.${foreignKey} = table${i}.${entityId}`;
+                    i++;
+                }
             });
-
-            query+=" \n ";
         };
 
         if(input.where) {
@@ -191,8 +197,16 @@ export class ModelRepository {
             if(!foreign_keys) throw new Error("There are no relations for the entity "+process.env.MYSQL_DATABASE);
             if(!primary_key) throw new Error("There is no primary key for the entity "+process.env.MYSQL_DATABASE);
 
-            foreign_keys.forEach(([entityName, foreignKey, _]) => {
-                query+=` \n LEFT JOIN ${entityName} table2 ON table1.${foreignKey} = table2.${primary_key.getName()}`;
+            let i = 2;
+            foreign_keys.forEach(([entityName, foreignKey, entityId, RelationType]) => {
+                if(RelationType === "OneToOne"){
+                    query+=` \n LEFT JOIN ${entityName} table${i} ON table1.${foreignKey} = table${i}.${primary_key.getName()}`;
+                    i++;
+                }
+                else if(RelationType === "OneToMany"){
+                    query+=` \n LEFT JOIN ${entityName} table${i} ON table1.${entityId} = table${i}.${entityId}`;
+                    i++;
+                }
             });
 
             query+=" \n ";

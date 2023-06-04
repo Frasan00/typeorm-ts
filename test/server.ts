@@ -3,6 +3,7 @@ import cors from "cors";
 import { DatabaseController } from "../src/DatabaseController";
 import { User } from "./entities/User";
 import { Profile } from "./entities/Profile";
+import { Post } from "./entities/Post";
 
 require("dotenv").config();
 const app = express();
@@ -20,19 +21,21 @@ const mysql = new DatabaseController({
     user_name: process.env.MYSQL_USER || "admin",
     password: process.env.MYSQL_PASSWORD || "password",
     port: port,
-    entities: [Profile, User]
+    entities: [Post, Profile, User]
 });
 
 mysql.connection()
 .then(async () => {
-    await initiDB(); // after populating the db remember to comment this part
+    await initiDB()
+        .then(async () => {
+            await userRepo.find({
+                joinAll: true
+            })
+                .then((data) => console.log(data))
+                .catch((err) => {});
+        })
 
     // some queries
-    await userRepo.find({
-        joinAll: true
-    })
-        .then((data) => console.log(data))
-        .catch((err) => {});
     
     /*await const q1 = userRepo.findOneById({id: 2})
         .then((data) => console.log(data))
@@ -59,19 +62,25 @@ mysql.connection()
 
 const userRepo = mysql.getModelRepository(User);
 const profileRepo = mysql.getModelRepository(Profile);
+const postRepo = mysql.getModelRepository(Post);
 
 // user entity popuplation
 async function initiDB() {
-    const profile1 = new Profile();
-    profile1.followers.setValue(49);
-    profile1.bio.setValue("A good profile");
 
-    await profileRepo.save(profile1);
+    const post1 = new Post();
+    post1.title.setValue("New post 1");
+    post1.user_id.setValue(1);
+
+    const post2 = new Post();
+    post1.title.setValue("New post 2");
+    post1.user_id.setValue(1);
+
+    await Promise.all([post1, post2]);
 
     const user = new User();
     user.name.setValue("Francesco");
     user.age.setValue(5);
-    user.profile.setValue("1");
+    user.profile.setValue(1);
 
     const user2 = new User();
     user2.name.setValue("Francesco");
@@ -86,6 +95,12 @@ async function initiDB() {
     user4.age.setValue(17);
 
     await Promise.all([userRepo.save(user),userRepo.save(user2),userRepo.save(user3),userRepo.save(user4)])
+
+    const profile1 = new Profile();
+    profile1.followers.setValue(49);
+    profile1.bio.setValue("A good profile");
+
+    await profileRepo.save(profile1);
 }
 
 

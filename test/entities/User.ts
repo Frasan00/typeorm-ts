@@ -1,6 +1,7 @@
 import { Entity } from "../../src/Entity";
 import { Column } from "../../src/Column";
 import { Profile } from "./Profile";
+import { Post } from "./Post";
 
 export class User extends Entity {
 
@@ -17,11 +18,11 @@ export class User extends Entity {
         });
 
         this.id = new Column({ name: "id", type: "INTEGER", constraints: { NOT_NULL: true, AUTO_INCREMENT: true } });
+        this.primary_key = this.id;
         this.name = new Column({ name: "name", type: "STRING", constraints: { NOT_NULL: true } });
         this.age = new Column({ name: "age", type: "INTEGER"});
         this.profile = this.oneToOne(Profile, "id");
-
-        this.primary_key = this.id;
+        this.oneToMany(Post, "user_id");
 
         this.addColumns(this.id, this.name, this.age, this.profile);
     }

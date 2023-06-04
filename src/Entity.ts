@@ -1,18 +1,13 @@
 import { Column, ColumnType } from "./Column";
 
-type ForeignKeysType = [string, string, string][]; // [Entity name, foreign key, entity_primary_key]
+type ForeignKeysType = [string, string, string, RelationsType][]; // [Entity name, foreign key, entity_primary_key, type of relation]
+
+type RelationsType = "OneToOne" | "OneToMany" | "ManyToMany";
 
 interface IEntityInput {
   readonly entityName: string;
   readonly columns?: Column[];
   readonly primary_key?: Column;
-}
-
-type OneToOneConstraints = {
-  NOT_NULL?: boolean | false;
-  UNIQUE?: boolean | false;
-  DEFAULT?: ColumnType | false;
-  AUTO_INCREMENT?: boolean | false;
 }
 
 export abstract class Entity {
@@ -44,7 +39,7 @@ export abstract class Entity {
   }
 
   public initializeColumns() {
-    if (this.columns.length === 0) {
+    if (this.columns.length === 0) {0
       throw new Error(`There are no columns to initialize in Entity ${this.entityName}`);
     }
 
@@ -70,8 +65,10 @@ export abstract class Entity {
     if (this.primary_key) query += `\n ,PRIMARY KEY (${this.primary_key.getName()}) `;
 
     if (this.foreign_keys && this.foreign_keys.length > 0) {
-      this.foreign_keys.forEach(([entityName, foreign_key, entity_primary_key]) => {
-        query += `\n,FOREIGN KEY (${foreign_key}) REFERENCES ${entityName}(${entity_primary_key}) `;
+      this.foreign_keys.forEach(([entityName, foreign_key, entity_primary_key, relationType]) => {
+        if(relationType === "OneToOne"){
+          query += `\n,FOREIGN KEY (${foreign_key}) REFERENCES ${entityName}(${entity_primary_key}) `;
+        }
       });
     }
 
@@ -123,13 +120,19 @@ export abstract class Entity {
       }
     });
 
-    this.foreign_keys.push([newEntity.getName(), foreign_key, entity_key]);
+    this.foreign_keys.push([newEntity.getName(), foreign_key, entity_key, "OneToOne"]);
 
     return column;
   }
 
-  protected oneToMany(){
+  protected oneToMany(entity: new () =>  Entity, newEntityForeignKey: string, input?: { not_null: boolean }){
+    const newEntity = new entity();
+    const entity_type = this.primary_key?.getConf().type;
+    const thisEntityPrimaryKey = this.primary_key?.getName();
+    if(!thisEntityPrimaryKey) throw new Error("The target entity has no primary key");
+    if(!entity_type) throw new Error("The passed primary_key type isn't correct");
 
+    this.foreign_keys.push([newEntity.getName(), thisEntityPrimaryKey, newEntityForeignKey, "OneToMany"]);
   }
 
   protected manyToMany(){
