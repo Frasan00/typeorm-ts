@@ -1,25 +1,31 @@
 import { Column, ColumnType } from "./Column";
 
-type ForeignKeysType = [string, string][];
+type ForeignKeysType = [string, string, string][]; // [Entity name, foreign key, entity_primary_key]
 
 interface IEntityInput {
   readonly entityName: string;
   readonly columns?: Column[];
   readonly primary_key?: Column;
-  readonly foreign_keys?: ForeignKeysType; // [Entity name, Entity foreign key]
+}
+
+type OneToOneConstraints = {
+  NOT_NULL?: boolean | false;
+  UNIQUE?: boolean | false;
+  DEFAULT?: ColumnType | false;
+  AUTO_INCREMENT?: boolean | false;
 }
 
 export abstract class Entity {
   protected entityName: string;
   protected columns: Column[];
   protected primary_key?: Column;
-  protected foreign_keys?: ForeignKeysType;
+  protected foreign_keys: ForeignKeysType;
 
   public constructor(input: IEntityInput) {
     this.entityName = input.entityName;
     this.columns = input.columns || [];
     this.primary_key = input.primary_key;
-    this.foreign_keys = input.foreign_keys;
+    this.foreign_keys = [];
   }
 
   public getName() {
@@ -64,8 +70,8 @@ export abstract class Entity {
     if (this.primary_key) query += `\n ,PRIMARY KEY (${this.primary_key.getName()}) `;
 
     if (this.foreign_keys && this.foreign_keys.length > 0) {
-      this.foreign_keys.forEach(([keyName, entityName]) => {
-        query += `\n,FOREIGN KEY (${keyName}) REFERENCES ${entityName}(${keyName}) `;
+      this.foreign_keys.forEach(([entityName, foreign_key, entity_primary_key]) => {
+        query += `\n,FOREIGN KEY (${foreign_key}) REFERENCES ${entityName}(${entity_primary_key}) `;
       });
     }
 
@@ -94,5 +100,39 @@ export abstract class Entity {
       default:
         return "Invalid type for the input type "+input+" for the entity "+this.entityName;
     }
+  }
+
+  /*
+  * Relations
+  */
+  protected oneToOne(entity: new () =>  Entity, entity_primaryKey: any, input?: { not_null: boolean }): Column{
+    const newEntity = new entity();
+    const foreign_key = `${newEntity.getName()}_${entity_primaryKey}`;
+    const entity_key = newEntity.getEntityInfo().primary_key?.getName();
+    const entity_type = newEntity.getEntityInfo().primary_key?.getConf().type;
+    if(!entity_key) throw new Error("The passed entity does not have a primary key to be referenced");
+    if(!entity_type) throw new Error("The passed primary_key type isn't correct");
+
+    const column = new Column({
+      name: foreign_key,
+      type: entity_type,
+      typeLength: 50,
+      constraints: {
+        NOT_NULL: input?.not_null || false,
+        UNIQUE: true,
+      }
+    });
+
+    this.foreign_keys.push([newEntity.getName(), foreign_key, entity_key]);
+
+    return column;
+  }
+
+  protected oneToMany(){
+
+  }
+
+  protected manyToMany(){
+
   }
 }

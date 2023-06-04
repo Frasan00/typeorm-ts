@@ -2,8 +2,9 @@ import express from "express";
 import cors from "cors";
 import { DatabaseController } from "../src/DatabaseController";
 import { User } from "./entities/User";
+import { Profile } from "./entities/Profile";
 
-const config = require("dotenv").config();
+require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 app.use(cors());
@@ -19,70 +20,73 @@ const mysql = new DatabaseController({
     user_name: process.env.MYSQL_USER || "admin",
     password: process.env.MYSQL_PASSWORD || "password",
     port: port,
-    entities: [User]
+    entities: [Profile, User]
 });
 
+mysql.connection()
+.then(async () => {
+    await initiDB(); // after populating the db remember to comment this part
+
+    // some queries
+    await userRepo.find({
+        joinAll: true
+    })
+        .then((data) => console.log(data))
+        .catch((err) => {});
+    
+    /*await const q1 = userRepo.findOneById({id: 2})
+        .then((data) => console.log(data))
+        .catch((err) => {}) ;*/
+
+    /*await const q2 = userRepo.find()
+        .then((data) => console.log(data))
+        .catch((err) => {}) ;*/
+    
+    /*await userRepo.find({ select: [{ column: "id", function: "COUNT" }] })
+        .then((_) => console.log(_))*/
+
+
+
+    // query builder
+
+    /*const query = userRepo.createQueryBuilder()
+    .where("id", "=", { value: 1 })
+
+    query.getQueryResult()
+    .then((data) => console.log(data))
+    .catch((err) => {}) ;*/
+})
+
 const userRepo = mysql.getModelRepository(User);
+const profileRepo = mysql.getModelRepository(Profile);
 
 // user entity popuplation
-const user = new User();
-user.name.setValue("Francesco");
-user.age.setValue(5);
+async function initiDB() {
+    const profile1 = new Profile();
+    profile1.followers.setValue(49);
+    profile1.bio.setValue("A good profile");
 
-const user2 = new User();
-user2.name.setValue("Francesco");
-user2.age.setValue(13);
+    await profileRepo.save(profile1);
 
-const user3 = new User();
-user3.name.setValue("Giovanni");
-user3.age.setValue(17);
+    const user = new User();
+    user.name.setValue("Francesco");
+    user.age.setValue(5);
+    user.profile.setValue("1");
 
-const user4 = new User();
-user4.name.setValue("Giovanni");
-user4.age.setValue(17);
+    const user2 = new User();
+    user2.name.setValue("Francesco");
+    user2.age.setValue(13);
 
-/*const p1 = userRepo.save(user)
-const p2 = userRepo.save(user2)
-const p3 = userRepo.save(user3)
-const p4 = userRepo.save(user4)
+    const user3 = new User();
+    user3.name.setValue("Giovanni");
+    user3.age.setValue(17);
 
-Promise.all([p1,p2,p3,p4])
-.then((_) => console.log("Saving completed"))
-.catch((err) => console.error(err));*/
+    const user4 = new User();
+    user4.name.setValue("Giovanni");
+    user4.age.setValue(17);
 
-// some queries
-/*const p1 = userRepo.findOneById({id: 2})
-.then((data) => console.log(data))
-.catch((err) => {}) ;
-const p2 = userRepo.find()
-    .then((data) => console.log(data))
-    .catch((err) => {}) ;
-
-const p3 = userRepo.find({
-    select: [{
-        column: "name"
-    }],
-    where: {
-        id: 3,
-        name: "Giovanni",
-        age: { moreThan: 2 }
-    }
-})
-.then((data) => console.log(data))
-.catch((err) => {}) ;*/
-
-/*userRepo.find({ select: [{ column: "id", function: "COUNT" }] })
-.then((_) => console.log(_))*/
-
-
-
-// query builder
-const query = userRepo.createQueryBuilder()
-.where("id", "=", { value: 1 })
-
-query.getQueryResult()
-.then((data) => console.log(data))
-.catch((err) => {}) ;
+    await Promise.all([userRepo.save(user),userRepo.save(user2),userRepo.save(user3),userRepo.save(user4)])
+}
 
 
 app.listen(PORT, () => console.log("Listening on port "+PORT))

@@ -102,7 +102,7 @@ export class ModelRepository {
                 if(select.function) query+=`${select.function}(${select.column}) `
                 else query+=`${select.column} `
             });
-        }else query+="SELECT * ";
+        }else query+=" * ";
 
         query+=`\n FROM ${this.model.getName()} table1 \n `;
 
@@ -112,9 +112,10 @@ export class ModelRepository {
             if(!foreign_keys) throw new Error("There are no relations for the entity "+process.env.MYSQL_DATABASE);
             if(!primary_key) throw new Error("There is no primary key for the entity "+process.env.MYSQL_DATABASE);
 
-            foreign_keys.forEach((relation) => {
-                query+=` \n LEFT JOIN ${relation[0]} table2 ON table1.${primary_key.getName()} = table2.${relation[1]} `;
+            foreign_keys.forEach(([entityName, foreignKey, _]) => {
+                query+=` \n LEFT JOIN ${entityName} table2 ON table1.${foreignKey} = table2.${primary_key.getName()}`;
             });
+
             query+=" \n ";
         };
 
@@ -190,8 +191,8 @@ export class ModelRepository {
             if(!foreign_keys) throw new Error("There are no relations for the entity "+process.env.MYSQL_DATABASE);
             if(!primary_key) throw new Error("There is no primary key for the entity "+process.env.MYSQL_DATABASE);
 
-            foreign_keys.forEach((relation) => {
-                query+=` \n LEFT JOIN ${relation[0]} table2 ON table1.${primary_key.getName()} = table2.${relation[1]}`;
+            foreign_keys.forEach(([entityName, foreignKey, _]) => {
+                query+=` \n LEFT JOIN ${entityName} table2 ON table1.${foreignKey} = table2.${primary_key.getName()}`;
             });
 
             query+=" \n ";

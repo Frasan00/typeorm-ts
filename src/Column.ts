@@ -5,8 +5,6 @@ export type ColumnType =
     | "BOOLEAN"
     | "DATE";
 
-type IntegerBetweenZeroAnd255 = number & { __integerBetweenZeroAnd255__: true; };
-
 export type ConstraintsType = {
     NOT_NULL?: boolean | false;
     UNIQUE?: boolean | false;
@@ -17,7 +15,7 @@ export type ConstraintsType = {
 interface IColumnInput {
     readonly name: string,
     readonly type: ColumnType,
-    readonly typeLength?: IntegerBetweenZeroAnd255,
+    readonly typeLength?: number,
     readonly constraints?: ConstraintsType,
     value?: any,
 };

@@ -8,6 +8,7 @@ interface IDatabaseController {
     readonly user_name: string,
     readonly password: string,
     readonly port?: number,
+    readonly synchronize?: boolean,
     readonly entities: Array<new () => Entity>,
 };
 
@@ -15,6 +16,7 @@ interface IDatabaseController {
 export class DatabaseController {
     protected mysql: Pool;
     protected entities: Array<new () => Entity>;
+    protected synchronize: boolean; // to do
 
     public constructor(input: IDatabaseController){
         this.mysql = mysql.createPool({
@@ -24,20 +26,17 @@ export class DatabaseController {
             password: input.password,
             port: input.port || 3306,
         });
-        this.connection()
-            .then((_) => console.log("Connected to the database on port: "+input.port || 3306))
-            .catch((err) => console.error(err));
-
-        // entities initialization
         this.entities = input.entities;
-        this.processEntities();
+        this.synchronize = input.synchronize || false;
     }
 
-    private async connection(){
+    public async connection(){
         await this.mysql.getConnection();
+        await this.processEntities()
+            .then((data) => console.log("Entities were initialized correctly"))
     }
 
-    public async processEntities() {
+    protected async processEntities() {
         if (this.entities.length === 0) throw new Error(`There are no entities to initialize`);
         const promises = this.entities.map(async (entity) => {
 
