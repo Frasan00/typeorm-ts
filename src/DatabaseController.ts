@@ -33,7 +33,38 @@ export class DatabaseController {
     public async connection(){
         await this.mysql.getConnection();
         await this.processEntities()
-            .then((data) => console.log("Entities were initialized correctly"))
+            .then(async (_) => {
+                await this.initializeRelations()
+                console.log("Entities were initialized correctly")
+            })
+    }
+
+    protected async initializeRelations(){
+        if (this.entities.length === 0) throw new Error(`There are no entities to initialize`);
+        const promises = this.entities.map(async (entity) => {
+
+            const entityInstance = new entity();
+
+            if (!(entityInstance instanceof Entity)) {
+              throw new Error(`Entity class "${entity.name}" does not extend the Entity base class`);
+            }
+
+            const query: string = entityInstance.initializeRelations();
+            console.log(query);
+
+            try {
+                if (query === "") return;
+                await this.mysql.query(query);
+            } catch (err) {
+                console.error(err);
+            }
+            });
+        
+            try {
+                await Promise.all(promises);
+            } catch (err) {
+                console.error(err);
+            }
     }
 
     protected async processEntities() {

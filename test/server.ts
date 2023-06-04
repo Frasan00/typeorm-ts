@@ -21,7 +21,7 @@ const mysql = new DatabaseController({
     user_name: process.env.MYSQL_USER || "admin",
     password: process.env.MYSQL_PASSWORD || "password",
     port: port,
-    entities: [Post, Profile, User]
+    entities: [Profile, User, Post]
 });
 
 mysql.connection()
@@ -77,6 +77,12 @@ async function initiDB() {
 
     await Promise.all([post1, post2]);
 
+    const profile1 = new Profile();
+    profile1.followers.setValue(49);
+    profile1.bio.setValue("A good profile");
+
+    await profileRepo.save(profile1);
+
     const user = new User();
     user.name.setValue("Francesco");
     user.age.setValue(5);
@@ -95,12 +101,6 @@ async function initiDB() {
     user4.age.setValue(17);
 
     await Promise.all([userRepo.save(user),userRepo.save(user2),userRepo.save(user3),userRepo.save(user4)])
-
-    const profile1 = new Profile();
-    profile1.followers.setValue(49);
-    profile1.bio.setValue("A good profile");
-
-    await profileRepo.save(profile1);
 }
 
 

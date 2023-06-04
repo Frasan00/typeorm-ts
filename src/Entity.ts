@@ -64,18 +64,28 @@ export abstract class Entity {
 
     if (this.primary_key) query += `\n ,PRIMARY KEY (${this.primary_key.getName()}) `;
 
-    if (this.foreign_keys && this.foreign_keys.length > 0) {
-      this.foreign_keys.forEach(([entityName, foreign_key, entity_primary_key, relationType]) => {
-        if(relationType === "OneToOne"){
-          query += `\n,FOREIGN KEY (${foreign_key}) REFERENCES ${entityName}(${entity_primary_key}) `;
-        }
-      });
-    }
-
     query += "\n);";
 
     return query;
   }
+
+  public initializeRelations(): string {
+    if(this.foreign_keys.length === 0) return "";
+    let query = `ALTER TABLE ${this.getName()}`;
+  
+    this.foreign_keys.forEach(([entityName, foreign_key, entity_primary_key, relationType]) => {
+      if (relationType === "OneToOne") {
+        query += `\n ADD CONSTRAINT fk_${entityName}_${foreign_key} FOREIGN KEY (${foreign_key}) REFERENCES ${entityName}(${entity_primary_key}),`;
+      }
+    });
+
+    query = query.slice(0, -1);
+
+    query+="; \n";
+  
+    return query;
+  }
+  
 
   private selectType(input: string, length: number): string{
     switch(input){
