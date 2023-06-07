@@ -34,9 +34,18 @@ export class DatabaseController {
         await this.mysql.getConnection();
         await this.processEntities()
             .then(async (_) => {
-                await this.initializeRelations()
-                console.log("Entities were initialized correctly")
+                await this.initializeRelations();
+
+                console.log("Entities were initialized correctly");
             })
+    }
+
+    protected syncTables(){
+
+    }
+
+    protected getTables(){
+        
     }
 
     protected async initializeRelations(){

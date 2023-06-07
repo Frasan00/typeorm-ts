@@ -112,7 +112,7 @@ export abstract class Entity {
   /*
   * Relations
   */
-  protected oneToOne(entity: new () =>  Entity, entity_primaryKey: any, input?: { not_null: boolean }): Column{
+  protected oneToOne(entity: new () =>  Entity, entity_primaryKey: any, input?: { not_null: boolean, unique: boolean }): Column{
     const newEntity = new entity();
     const foreign_key = `${newEntity.getName()}_${entity_primaryKey}`;
     const entity_key = newEntity.getEntityInfo().primary_key?.getName();
@@ -126,7 +126,7 @@ export abstract class Entity {
       typeLength: 50,
       constraints: {
         NOT_NULL: input?.not_null || false,
-        UNIQUE: true,
+        UNIQUE: input?.unique || false,
       }
     });
 
