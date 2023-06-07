@@ -21,19 +21,20 @@ const mysql = new DatabaseController({
     user_name: process.env.MYSQL_USER || "admin",
     password: process.env.MYSQL_PASSWORD || "password",
     port: port,
+    synchronize: true,
     entities: [Profile, User, Post]
 });
 
 mysql.connection()
 .then(async () => {
-    await initiDB()
+    /*await initiDB()
         .then(async () => {
             await userRepo.find({
                 joinAll: true
             })
                 .then((data) => console.log(data))
                 .catch((err) => {});
-        })
+        })*/
 
     // some queries
     
