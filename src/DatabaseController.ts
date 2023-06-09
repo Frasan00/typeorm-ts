@@ -52,7 +52,7 @@ export class DatabaseController {
         const databaseTables: any[] = databaseShow.map((row: any) => Object.values(row)[0]); // referes to the tables present in the database to be updated
         const entitiesNames = this.entities.map((entity) => new entity().getName())// referes to the latest entities written by the user
 
-        /* It is given the new tables will be automaticaly created by processEntities, we just have to delete or update present tables */
+        /* It is given the new tables will be automaticaly created by processEntities, we just have to delete or update present tables and columns */
 
         /* Checks if there are new Entitites to DELETE */
         databaseTables.forEach((table) => {
@@ -77,17 +77,21 @@ export class DatabaseController {
                 const type = entity.selectType(column.getConf().type, column.getConf().typeLength);
                 const constraints = column.getConf().constraints;
                 if(!databaseColumns.includes(columnName)){
-                    query+=`ALTER TABLE ${entityName} ADD COLUMN ${columnName} ${type} ${constraints?.AUTO_INCREMENT ? `AUTO_INCREMENT` : ""} ${constraints?.NOT_NULL ? `NOT NULL` : ""} ${constraints?.DEFAULT ? `DEFAULT ${constraints?.DEFAULT}` : ""} ${constraints?.UNIQUE ? `UNIQUE` : ""}; \n`;
-                    conoslem
+                    const sqlStatement = `ALTER TABLE ${entityName} ADD COLUMN ${columnName} ${type} ${constraints?.AUTO_INCREMENT ? `AUTO_INCREMENT` : ""} ${constraints?.NOT_NULL ? `NOT NULL` : ""} ${constraints?.DEFAULT ? `DEFAULT ${constraints?.DEFAULT}` : ""} ${constraints?.UNIQUE ? `UNIQUE` : ""}; \n`;
+                    query+= sqlStatement;
+                    console.log(sqlStatement);
                 }
-                else query+=`ALTER TABLE ${entityName} MODIFY COLUMN ${columnName} ${type} ${constraints?.AUTO_INCREMENT ? `AUTO_INCREMENT` : ""} ${constraints?.NOT_NULL ? `NOT NULL` : ""} ${constraints?.DEFAULT ? `DEFAULT ${constraints?.DEFAULT}` : ""} ${constraints?.UNIQUE ? `UNIQUE` : ""}; \n`;
-            })
+                else {
+                    const sqlStatement = `ALTER TABLE ${entityName} MODIFY COLUMN ${columnName} ${type} ${constraints?.AUTO_INCREMENT ? `AUTO_INCREMENT` : ""} ${constraints?.NOT_NULL ? `NOT NULL` : ""} ${constraints?.DEFAULT ? `DEFAULT ${constraints?.DEFAULT}` : ""} ${constraints?.UNIQUE ? `UNIQUE` : ""}; \n`;
+                    query+= sqlStatement;
+                    console.log(sqlStatement);
+                }
+            });
         });
         
         try {
             if (query === ``) return;
-            console.log(query || "PAOLOOOOOO");
-            await this.mysql.query(query);
+            return await this.mysql.query(query);
         } catch (err) {
             console.error("Error while updating tables", err);
         }
