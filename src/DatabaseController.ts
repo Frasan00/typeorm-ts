@@ -1,6 +1,7 @@
 import mysql, { Pool } from "mysql2/promise";
 import { Entity } from "./Entity";
 import { ModelRepository } from "./ModelRepository";
+import { Column } from "./Column";
 
 interface IDatabaseController {
     readonly host: string,
@@ -47,7 +48,6 @@ export class DatabaseController {
     * Syncs the database with latest entities changes
     */
     protected async syncTables(){
-        let query = ``;
         const [databaseShow]: any[] = await this.mysql.query("SHOW TABLES");
         const databaseTables: any[] = databaseShow.map((row: any) => Object.values(row)[0]); // referes to the tables present in the database to be updated
         const entitiesNames = this.entities.map((entity) => new entity().getName())// referes to the latest entities written by the user
@@ -55,15 +55,16 @@ export class DatabaseController {
         /* It is given the new tables will be automaticaly created by processEntities, we just have to delete or update present tables and columns */
 
         /* Checks if there are new Entitites to DELETE */
-        databaseTables.forEach((table) => {
-            if(!entitiesNames.includes(table)) query+=`DROP TABLE ${table}; \n`
+        databaseTables.forEach(async (table) => {
+            if(!entitiesNames.includes(table)) {
+                try {
+                    console.log(`DROP TABLE ${table};`);
+                    await this.mysql.query(`DROP TABLE ${table};`)
+                } catch (err) {
+                    console.error("Error while deleting old tables", err);
+                }
+            };
         });
-
-        try {
-            if (query !== ``) await this.mysql.query(query);
-        } catch (err) {
-            console.error("Error while deleting old tables", err);
-        }
 
         /* updates the columns */
         this.entities.forEach(async (Entity) => {
@@ -72,29 +73,43 @@ export class DatabaseController {
             const [databaseColumnsShow]: any[] = await this.mysql.query(`SHOW COLUMNS FROM ${entityName}`);
             const databaseColumns: any[] = databaseColumnsShow.map((row: any) => Object.values(row)[0]);
 
-            entity.getEntityInfo().columns.forEach((column) => {
+            entity.getEntityInfo().columns.forEach(async (column) => {
                 const columnName = column.getName();
                 const type = entity.selectType(column.getConf().type, column.getConf().typeLength);
                 const constraints = column.getConf().constraints;
                 if(!databaseColumns.includes(columnName)){
                     const sqlStatement = `ALTER TABLE ${entityName} ADD COLUMN ${columnName} ${type} ${constraints?.AUTO_INCREMENT ? `AUTO_INCREMENT` : ""} ${constraints?.NOT_NULL ? `NOT NULL` : ""} ${constraints?.DEFAULT ? `DEFAULT ${constraints?.DEFAULT}` : ""} ${constraints?.UNIQUE ? `UNIQUE` : ""}; \n`;
-                    query+= sqlStatement;
-                    console.log(sqlStatement);
+                    try {
+                        console.log(sqlStatement);
+                        await this.mysql.query(sqlStatement);
+                    } catch (err) {
+                        console.error("Error while updating tables", err);
+                    }
                 }
                 else {
                     const sqlStatement = `ALTER TABLE ${entityName} MODIFY COLUMN ${columnName} ${type} ${constraints?.AUTO_INCREMENT ? `AUTO_INCREMENT` : ""} ${constraints?.NOT_NULL ? `NOT NULL` : ""} ${constraints?.DEFAULT ? `DEFAULT ${constraints?.DEFAULT}` : ""} ${constraints?.UNIQUE ? `UNIQUE` : ""}; \n`;
-                    query+= sqlStatement;
-                    console.log(sqlStatement);
+                    try {
+                        console.log(sqlStatement);
+                        await this.mysql.query(sqlStatement);
+                    } catch (err) {
+                        console.error("Error while updating tables", err);
+                    }
                 }
             });
+            
+            /* Deletes old columns */
+            const entityColumns = entity.getEntityInfo().columns.map((column) => column.getName());
+            databaseColumns.forEach(async (column) => {
+                if(!entityColumns.includes(column)){
+                    try {
+                        console.log(`ALTER TABLE ${entityName} DROP COLUMN ${column}`);
+                        await this.mysql.query(`ALTER TABLE ${entityName} DROP COLUMN ${column}`);
+                    } catch (err) {
+                        console.error("Error while updating tables", err);
+                    }
+                }
+            })
         });
-        
-        try {
-            if (query === ``) return;
-            return await this.mysql.query(query);
-        } catch (err) {
-            console.error("Error while updating tables", err);
-        }
     }
 
     protected async initializeRelations(){
