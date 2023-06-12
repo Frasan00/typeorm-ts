@@ -21,8 +21,7 @@ export class User extends Entity {
         this.primary_key = this.id;
         this.name = new Column({ name: "name", type: "STRING", constraints: { NOT_NULL: true } });
         this.age = new Column({ name: "age", type: "INTEGER"});
-        this.profile = this.oneToOne(Profile, "id");
-        this.oneToMany(Post, "user_id");
+        this.profile = this.oneToOne(Profile, { UNIQUE: true });
 
         this.addColumns(this.id, this.name, this.age, this.profile);
     }

@@ -108,18 +108,14 @@ export class ModelRepository {
 
         if(input.joinAll){
             const primary_key = this.model.getEntityInfo().primary_key;
-            const foreign_keys = this.model.getEntityInfo().foreign_keys;
-            if(!foreign_keys) throw new Error("There are no relations for the entity "+process.env.MYSQL_DATABASE);
+            const relations = this.model.getEntityInfo().relations;
+            if(!relations) throw new Error("There are no relations for the entity "+process.env.MYSQL_DATABASE);
             if(!primary_key) throw new Error("There is no primary key for the entity "+process.env.MYSQL_DATABASE);
 
             let i = 2;
-            foreign_keys.forEach(([entityName, foreignKey, entityId, RelationType]) => {
-                if(RelationType === "OneToOne"){
-                    query+=` \n LEFT JOIN ${entityName} table${i} ON table1.${foreignKey} = table${i}.${primary_key.getName()}`;
-                    i++;
-                }
-                else if(RelationType === "OneToMany"){
-                    query+=` \n LEFT JOIN ${entityName} table${i} ON table1.${foreignKey} = table${i}.${entityId}`;
+            relations.forEach((relation) => {
+                if(relation.relation === "OneToOne"){
+                    query+=` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${relation.foreign_key} = table${i}.${relation.entity_primary_key}`;
                     i++;
                 }
             });
@@ -193,23 +189,17 @@ export class ModelRepository {
 
         if(input.joinAll){
             const primary_key = this.model.getEntityInfo().primary_key;
-            const foreign_keys = this.model.getEntityInfo().foreign_keys;
-            if(!foreign_keys) throw new Error("There are no relations for the entity "+process.env.MYSQL_DATABASE);
+            const relations = this.model.getEntityInfo().relations;
+            if(!relations) throw new Error("There are no relations for the entity "+process.env.MYSQL_DATABASE);
             if(!primary_key) throw new Error("There is no primary key for the entity "+process.env.MYSQL_DATABASE);
 
             let i = 2;
-            foreign_keys.forEach(([entityName, foreignKey, entityId, RelationType]) => {
-                if(RelationType === "OneToOne"){
-                    query+=` \n LEFT JOIN ${entityName} table${i} ON table1.${foreignKey} = table${i}.${primary_key.getName()}`;
-                    i++;
-                }
-                else if(RelationType === "OneToMany"){
-                    query+=` \n LEFT JOIN ${entityName} table${i} ON table1.${entityId} = table${i}.${entityId}`;
+            relations.forEach((relation) => {
+                if(relation.relation === "OneToOne"){
+                    query+=` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${relation.foreign_key} = table${i}.${relation.entity_primary_key}`;
                     i++;
                 }
             });
-
-            query+=" \n ";
         };
 
         if(input.where) {
