@@ -1,4 +1,5 @@
 import { Column, ColumnType } from "./Column";
+import mysql from "mysql2/promise";
 
 type ForeignKeysType = [string, string, string, RelationsType][]; // [Entity name, foreign key, entity_primary_key, type of relation]
 
@@ -69,20 +70,8 @@ export abstract class Entity {
     return query;
   }
 
-  public initializeRelations(): string {
-    if(this.foreign_keys.length === 0) return "";
-    let query = ``;
-  
-    this.foreign_keys.forEach(([entityName, foreign_key, entity_primary_key, relationType]) => {
-      if (relationType === "OneToOne") {
-        query += ` 
-        ALTER TABLE ${this.getName()} DROP FOREIGN KEY fk_${entityName}_${foreign_key};
-        ALTER TABLE ${this.getName()} ADD CONSTRAINT fk_${entityName}_${foreign_key} FOREIGN KEY (${foreign_key}) REFERENCES ${entityName}(${entity_primary_key});
-        `
-      }
-    });
-  
-    return query;
+  public initializeRelations(mysql: mysql.Pool): void {
+
   }
   
 
@@ -111,37 +100,12 @@ export abstract class Entity {
   /*
   * Relations
   */
-  protected oneToOne(entity: new () =>  Entity, entity_primaryKey: any, input?: { not_null: boolean, unique: boolean }): Column{
-    const newEntity = new entity();
-    const foreign_key = `${newEntity.getName()}_${entity_primaryKey}`;
-    const entity_key = newEntity.getEntityInfo().primary_key?.getName();
-    const entity_type = newEntity.getEntityInfo().primary_key?.getConf().type;
-    if(!entity_key) throw new Error("The passed entity does not have a primary key to be referenced");
-    if(!entity_type) throw new Error("The passed primary_key type isn't correct");
+  protected oneToOne(){
 
-    const column = new Column({
-      name: foreign_key,
-      type: entity_type,
-      typeLength: 50,
-      constraints: {
-        NOT_NULL: input?.not_null || false,
-        UNIQUE: input?.unique || false,
-      }
-    });
-
-    this.foreign_keys.push([newEntity.getName(), foreign_key, entity_key, "OneToOne"]);
-
-    return column;
   }
 
-  protected oneToMany(entity: new () =>  Entity, newEntityForeignKey: string, input?: { not_null: boolean }){
-    const newEntity = new entity();
-    const entity_type = this.primary_key?.getConf().type;
-    const thisEntityPrimaryKey = this.primary_key?.getName();
-    if(!thisEntityPrimaryKey) throw new Error("The target entity has no primary key");
-    if(!entity_type) throw new Error("The passed primary_key type isn't correct");
+  protected oneToMany(){
 
-    this.foreign_keys.push([newEntity.getName(), thisEntityPrimaryKey, newEntityForeignKey, "OneToMany"]);
   }
 
   protected manyToMany(){

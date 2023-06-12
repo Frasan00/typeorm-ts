@@ -36,9 +36,8 @@ export class DatabaseController {
             await this.mysql.getConnection();
             await this.processEntities();
             if(this.synchronize === true) await this.syncTables();
-            // to correct
-            /*await this.initializeRelations()
-                .then((_) => console.log("Entities were initialized correctly"))*/
+            await this.initializeRelations()
+                .then((_) => console.log("Entities were initialized correctly"))
         }catch(err){
             console.error(err);
         }
@@ -109,6 +108,10 @@ export class DatabaseController {
                     }
                 }
             })
+
+            /*
+            * Relations updates
+            */
         });
     }
 
@@ -122,22 +125,8 @@ export class DatabaseController {
               throw new Error(`Entity class "${entity.name}" does not extend the Entity base class`);
             }
 
-            const query: string = entityInstance.initializeRelations();
-            console.log(query);
-
-            try {
-                if (query === "") return;
-                await this.mysql.query(query);
-            } catch (err) {
-                console.error(err);
-            }
-            });
-        
-            try {
-                await Promise.all(promises);
-            } catch (err) {
-                console.error(err);
-            }
+            entityInstance.initializeRelations(this.mysql);
+        });
     }
 
     protected async processEntities() {
