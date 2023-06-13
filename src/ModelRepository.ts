@@ -106,23 +106,26 @@ export class ModelRepository {
 
         query+=`\n FROM ${this.model.getName()} table1 \n `;
 
-        if(input.joinAll){
+        if (input.joinAll) {
             const primary_key = this.model.getEntityInfo().primary_key;
             const relations = this.model.getEntityInfo().relations;
-            if(!relations) throw new Error("There are no relations for the entity "+process.env.MYSQL_DATABASE);
-            if(!primary_key) throw new Error("There is no primary key for the entity "+process.env.MYSQL_DATABASE);
-
+            if (!relations) throw new Error("There are no relations for the entity " + process.env.MYSQL_DATABASE);
+            if (!primary_key) throw new Error("There is no primary key for the entity " + process.env.MYSQL_DATABASE);
+          
             let i = 2;
             relations.forEach((relation) => {
-                if(relation.relation === "OneToOne"){
-                    query+=` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${relation.foreign_key} = table${i}.${relation.entity_primary_key}`;
-                    i++;
-                }
+              if (relation.relation === "OneToOne") {
+                query += ` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${relation.foreign_key} = table${i}.${relation.entity_primary_key}`;
+                i++;
+              } else if (relation.relation === "OneToMany") {
+                query += ` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${primary_key} = table${i}.${relation.foreign_key}`;
+                i++;
+              }
             });
-        };
+          };          
 
         if(input.where) {
-            query+=` WHERE 1=1 `; // flag always true
+            query+=` \n WHERE 1=1 `; // flag always true
 
             const columns = Object.keys(input.where);
             const values = Object.values(input.where);
@@ -187,20 +190,23 @@ export class ModelRepository {
 
         query+=`\n FROM ${this.model.getName()} \n `;
 
-        if(input.joinAll){
+        if (input.joinAll) {
             const primary_key = this.model.getEntityInfo().primary_key;
             const relations = this.model.getEntityInfo().relations;
-            if(!relations) throw new Error("There are no relations for the entity "+process.env.MYSQL_DATABASE);
-            if(!primary_key) throw new Error("There is no primary key for the entity "+process.env.MYSQL_DATABASE);
-
+            if (!relations) throw new Error("There are no relations for the entity " + process.env.MYSQL_DATABASE);
+            if (!primary_key) throw new Error("There is no primary key for the entity " + process.env.MYSQL_DATABASE);
+          
             let i = 2;
             relations.forEach((relation) => {
-                if(relation.relation === "OneToOne"){
-                    query+=` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${relation.foreign_key} = table${i}.${relation.entity_primary_key}`;
-                    i++;
-                }
+              if (relation.relation === "OneToOne") {
+                query += ` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${relation.foreign_key} = table${i}.${relation.entity_primary_key}`;
+                i++;
+              } else if (relation.relation === "OneToMany") {
+                query += ` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${primary_key} = table${i}.${relation.foreign_key}`;
+                i++;
+              }
             });
-        };
+          };   
 
         if(input.where) {
             query+=` WHERE 1=1 `; // flag always true

@@ -9,27 +9,16 @@ interface IEntityInput {
   readonly primary_key?: Column;
 }
 
-type RelationsType = RelationType;
-
-
-type RelationType = {
+type RelationsType = {
   relation: Relations; // type of relation
   entity_name: string; 
   entity_primary_key: string
   foreign_key: string; // the field that enstablishes the relation with the given entity
 }
 
-type OneToOneInputType = {
+type RelationInputType = {
   NOT_NULL?: boolean | false;
   UNIQUE?: boolean | false;
-}
-
-type OneToManyInputType = {
-
-}
-
-type ManyToManyInputType = {
-
 }
 
 
@@ -150,7 +139,8 @@ export abstract class Entity {
   /*
   * Relations
   */
-  protected oneToOne(Entity: new () => Entity, input?: OneToOneInputType): Column{
+
+  protected oneToOne(Entity: new () => Entity, input?: RelationInputType): Column{
     const entity = new Entity();
     const entity_primary_key = entity.primary_key?.getName();
     if(!entity_primary_key) throw new Error(`The entity ${entity.getName()} does not have a primary key to be referred`);
@@ -166,7 +156,7 @@ export abstract class Entity {
     });
 
     const entity_primary_key_name = entity_primary_key;
-    const relationType: RelationType = {
+    const relationType: RelationsType = {
       relation: "OneToOne",
       entity_name: `${entity.getName()}`,
       entity_primary_key: `${entity_primary_key_name}`,
@@ -177,8 +167,34 @@ export abstract class Entity {
     return column;
   }
 
-  protected oneToMany(){
-
+  // to be inserted in the many table, it creates a foreign_key for the first table and returns a column
+  protected oneToMany(Entity: new () => Entity, input?: RelationInputType): Column {
+    const entity = new Entity();
+    const entity_primary_key = entity.primary_key?.getName();
+    if (!entity_primary_key) throw new Error(`The entity ${entity.getName()} does not have a primary key to be referred`);
+    if (!entity.primary_key) throw new Error(`The entity ${entity.getName()} does not have a primary key to be referred`);
+  
+    const foreign_key = `${entity.getName()}_${entity_primary_key}`;
+  
+    const relationType: RelationsType = {
+      relation: "OneToMany",
+      entity_name: `${entity.getName()}`,
+      entity_primary_key: `${entity_primary_key}`,
+      foreign_key: `${foreign_key}`,
+    };
+  
+    this.relations.push(relationType);
+  
+    const column = new Column({
+      name: foreign_key,
+      type: entity.primary_key.getConf().type,
+      constraints: {
+        NOT_NULL: input?.NOT_NULL,
+        UNIQUE: input?.UNIQUE,
+      },
+    });
+  
+    return column
   }
 
   protected manyToMany(){

@@ -1,5 +1,6 @@
 import { Column } from "../../src/Column";
 import { Entity } from "../../src/Entity";
+import { User } from "./User";
 
 export class Post extends Entity {
     public id: Column;
@@ -14,7 +15,7 @@ export class Post extends Entity {
   
       this.id = new Column({ name: "id", type: "INTEGER", constraints: { NOT_NULL: true, AUTO_INCREMENT: true } });
       this.title = new Column({ name: "title", type: "STRING" });
-      this.user_id = new Column({ name: "user_id", type: "INTEGER" });
+      this.user_id = this.oneToMany(User);
   
       this.primary_key = this.id;
   
