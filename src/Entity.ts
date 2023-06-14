@@ -182,7 +182,7 @@ export abstract class Entity {
       entity_primary_key: `${entity_primary_key}`,
       foreign_key: `${foreign_key}`,
     };
-  
+    
     this.relations.push(relationType);
   
     const column = new Column({

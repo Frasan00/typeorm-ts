@@ -118,11 +118,12 @@ export class ModelRepository {
                 query += ` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${relation.foreign_key} = table${i}.${relation.entity_primary_key}`;
                 i++;
               } else if (relation.relation === "OneToMany") {
-                query += ` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${primary_key} = table${i}.${relation.foreign_key}`;
+                query += ` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${relation.foreign_key} = table${i}.${primary_key.getName()}`;
+                console.log(query, "PAOLOOO")
                 i++;
               }
             });
-          };          
+        };          
 
         if(input.where) {
             query+=` \n WHERE 1=1 `; // flag always true
@@ -190,6 +191,7 @@ export class ModelRepository {
 
         query+=`\n FROM ${this.model.getName()} \n `;
 
+
         if (input.joinAll) {
             const primary_key = this.model.getEntityInfo().primary_key;
             const relations = this.model.getEntityInfo().relations;
@@ -202,11 +204,12 @@ export class ModelRepository {
                 query += ` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${relation.foreign_key} = table${i}.${relation.entity_primary_key}`;
                 i++;
               } else if (relation.relation === "OneToMany") {
-                query += ` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${primary_key} = table${i}.${relation.foreign_key}`;
+                query += ` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${relation.foreign_key} = table${i}.${primary_key.getName()}`;
+                console.log(query, "PAOLOOO")
                 i++;
               }
             });
-          };   
+        };   
 
         if(input.where) {
             query+=` WHERE 1=1 `; // flag always true

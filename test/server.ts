@@ -22,43 +22,48 @@ const mysql = new DatabaseController({
     password: process.env.MYSQL_PASSWORD || "password",
     port: port,
     synchronize: true,
-    entities: [Profile, User, Post]
+    entities: [Profile, Post, User]
 });
 
 mysql.connection()
-.then(async () => {
-    /*await initiDB()
-        .then(async () => {
-            await userRepo.find({
+    .then(async () => {
+        // await populateDB(); // uncomment to populate DB
+
+        await userRepo.find({
+            joinAll: true
+        })
+        .then((data) => console.log(data))
+        .catch((err) => {});
+
+        await postRepo.find({
                 joinAll: true
-            })
-                .then((data) => console.log(data))
-                .catch((err) => {});
-        })*/
+        })
+        .then((data) => console.log(data))
+        .catch((err) => {});
 
-    // some queries
-    
-    /*await const q1 = userRepo.findOneById({id: 2})
+        // some queries
+        
+        /*await const q1 = userRepo.findOneById({id: 2})
+            .then((data) => console.log(data))
+            .catch((err) => {}) ;*/
+
+        /*await const q2 = userRepo.find()
+            .then((data) => console.log(data))
+            .catch((err) => {}) ;*/
+        
+        /*await userRepo.find({ select: [{ column: "id", function: "COUNT" }] })
+            .then((_) => console.log(_))*/
+
+
+
+        // query builder
+
+        /*const query = userRepo.createQueryBuilder()
+        .where("id", "=", { value: 1 })
+
+        query.getQueryResult()
         .then((data) => console.log(data))
         .catch((err) => {}) ;*/
-
-    /*await const q2 = userRepo.find()
-        .then((data) => console.log(data))
-        .catch((err) => {}) ;*/
-    
-    /*await userRepo.find({ select: [{ column: "id", function: "COUNT" }] })
-        .then((_) => console.log(_))*/
-
-
-
-    // query builder
-
-    /*const query = userRepo.createQueryBuilder()
-    .where("id", "=", { value: 1 })
-
-    query.getQueryResult()
-    .then((data) => console.log(data))
-    .catch((err) => {}) ;*/
 })
 
 const userRepo = mysql.getModelRepository(User);
@@ -66,17 +71,18 @@ const profileRepo = mysql.getModelRepository(Profile);
 const postRepo = mysql.getModelRepository(Post);
 
 // user entity popuplation
-async function initiDB() {
+async function populateDB() {
 
     const post1 = new Post();
     post1.title.setValue("New post 1");
     post1.user_id.setValue(1);
 
     const post2 = new Post();
-    post1.title.setValue("New post 2");
-    post1.user_id.setValue(1);
+    post2.title.setValue("New post 2");
+    post2.user_id.setValue(1);
 
-    await Promise.all([post1, post2]);
+    await postRepo.save(post1);
+    await postRepo.save(post2);
 
     const profile1 = new Profile();
     profile1.followers.setValue(49);
