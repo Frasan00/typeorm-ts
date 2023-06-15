@@ -22,7 +22,7 @@ const mysql = new DatabaseController({
     password: process.env.MYSQL_PASSWORD || "password",
     port: port,
     synchronize: true,
-    entities: [Profile, Post, User]
+    entities: [Profile, User, Post]
 });
 
 mysql.connection()
@@ -35,11 +35,11 @@ mysql.connection()
         .then((data) => console.log(data))
         .catch((err) => {});
 
-        await postRepo.find({
+        /*await postRepo.find({
                 joinAll: true
         })
         .then((data) => console.log(data))
-        .catch((err) => {});
+        .catch((err) => {});*/
 
         // some queries
         

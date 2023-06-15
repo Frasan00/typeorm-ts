@@ -1,7 +1,7 @@
 import { Column, ColumnType } from "./Column";
 import mysql from "mysql2/promise";
 
-type Relations = "OneToOne" | "OneToMany" | "ManyToMany";
+type Relations = "OneToOne" | "OneToMany" | "ManyToOne"| "ManyToMany";
 
 interface IEntityInput {
   readonly entityName: string;
@@ -95,7 +95,8 @@ export abstract class Entity {
         const [result]: any[] = await mysql.query(checkConstraint);
   
         if (result.length === 0) {
-          const addConstraintQuery = `
+          if (relation.relation !== "ManyToOne"){
+            const addConstraintQuery = `
             ALTER TABLE ${this.entityName} 
             ADD CONSTRAINT ${constraintName}
             FOREIGN KEY (${relation.foreign_key})
@@ -103,6 +104,7 @@ export abstract class Entity {
           `;
           console.log(addConstraintQuery);
           await mysql.query(addConstraintQuery);
+          }
         } 
       } catch (err) {
         console.error("Error while initializing relations", err);
@@ -195,6 +197,19 @@ export abstract class Entity {
     });
   
     return column
+  }
+
+  protected manyToOne(entity_name: string, foreign_key: string): void {
+    if(!this.primary_key?.getName()) throw new Error(`The entity ${this.entityName} hasn't a primary key`);
+  
+    const relationType: RelationsType = {
+      relation: "ManyToOne",
+      entity_name: entity_name,
+      entity_primary_key: this.primary_key?.getName(),
+      foreign_key: foreign_key,
+    };
+    
+    this.relations.push(relationType);
   }
 
   protected manyToMany(){

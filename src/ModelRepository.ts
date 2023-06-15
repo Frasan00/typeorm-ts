@@ -119,10 +119,11 @@ export class ModelRepository {
                 i++;
               } else if (relation.relation === "OneToMany") {
                 query += ` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${relation.foreign_key} = table${i}.${primary_key.getName()}`;
-                console.log(query, "PAOLOOO")
                 i++;
-              }
-            });
+              }else if (relation.relation === "ManyToOne") {
+                query += ` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${primary_key.getName()} = table${i}.${relation.foreign_key}`;
+                i++;
+            }});
         };          
 
         if(input.where) {
