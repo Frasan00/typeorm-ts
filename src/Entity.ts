@@ -50,7 +50,25 @@ export abstract class Entity {
     this.columns.push(...columns);
   }
 
-  public initializeColumns() {
+  public async initializeColumns(mysql: mysql.Pool) {
+    // Every time the DB restarts it's synched with latest changes dropping eevery existing constraint and rebuilding them
+    this.relations = [];
+    const [constraintsShow]: any[] = await mysql.query(`
+    SELECT *
+    FROM information_schema.table_constraints
+    `);
+    const constraints: string[] = constraintsShow.map((row: any) => Object.values(row)[2]);
+    for (const constraint of constraints){
+      if(constraint !== "PRIMARY"){
+        const sqlStatement = `
+        ALTER TABLE ${this.entityName}
+        DROP CONSTRAINT \`${constraint}\`;
+        `;
+        await mysql.query(sqlStatement);
+        console.log(sqlStatement);
+      }
+    }
+
     if (this.columns.length === 0) {0
       throw new Error(`There are no columns to initialize in Entity ${this.entityName}`);
     }

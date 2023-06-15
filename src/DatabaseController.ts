@@ -18,6 +18,7 @@ export class DatabaseController {
     protected mysql: Pool;
     protected entities: Array<new () => Entity>;
     protected synchronize: boolean;
+    protected db_name: string;
 
     public constructor(input: IDatabaseController){
         this.mysql = mysql.createPool({
@@ -28,6 +29,7 @@ export class DatabaseController {
             port: input.port || 3306,
         });
         this.entities = input.entities;
+        this.db_name = input.db_name;
         this.synchronize = input.synchronize || false;
     }
 
@@ -108,10 +110,6 @@ protected async syncTables() {
                 }
             }
         }
-
-        /*
-        * Relations updates TO DO
-        */
     }
 }
 
@@ -141,7 +139,7 @@ protected async syncTables() {
               throw new Error(`Entity class "${entity.name}" does not extend the Entity base class`);
             }
 
-            const query: string = entityInstance.initializeColumns();
+            const query: string = await entityInstance.initializeColumns(this.mysql);
             if (!query) throw new Error(`Error while creating the query for Entity: ${entity.name}`);
             console.log(query);
 
