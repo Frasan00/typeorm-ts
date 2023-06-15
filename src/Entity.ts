@@ -94,7 +94,7 @@ export abstract class Entity {
         `;
         const [result]: any[] = await mysql.query(checkConstraint);
   
-        if (result.length === 0 && relation.relation !== "ManyToOne") {
+        if (result.length === 0 && relation.relation !== "OneToMany") {
           const addConstraintQuery = `
           ALTER TABLE ${this.entityName} 
           ADD CONSTRAINT ${constraintName}
@@ -167,8 +167,20 @@ export abstract class Entity {
     return column;
   }
 
-  // to be inserted in the many table, it creates a foreign_key for the first table and returns a column
-  protected oneToMany(Entity: new () => Entity, input?: RelationInputType): Column {
+  protected oneToMany(entity_name: string, foreign_key: string): void {
+    if(!this.primary_key?.getName()) throw new Error(`The entity ${this.entityName} hasn't a primary key`);
+  
+    const relationType: RelationsType = {
+      relation: "OneToMany",
+      entity_name: entity_name,
+      entity_primary_key: this.primary_key?.getName(),
+      foreign_key: foreign_key,
+    };
+    
+    this.relations.push(relationType);
+  }
+
+  protected manyToOne(Entity: new () => Entity, input?: RelationInputType): Column {
     const entity = new Entity();
     const entity_primary_key = entity.primary_key?.getName();
     if (!entity_primary_key) throw new Error(`The entity ${entity.getName()} does not have a primary key to be referred`);
@@ -177,7 +189,7 @@ export abstract class Entity {
     const foreign_key = `${entity.getName()}_${entity_primary_key}`;
   
     const relationType: RelationsType = {
-      relation: "OneToMany",
+      relation: "ManyToOne",
       entity_name: `${entity.getName()}`,
       entity_primary_key: `${entity_primary_key}`,
       foreign_key: `${foreign_key}`,
@@ -197,20 +209,8 @@ export abstract class Entity {
     return column
   }
 
-  protected manyToOne(entity_name: string, foreign_key: string): void {
-    if(!this.primary_key?.getName()) throw new Error(`The entity ${this.entityName} hasn't a primary key`);
-  
-    const relationType: RelationsType = {
-      relation: "ManyToOne",
-      entity_name: entity_name,
-      entity_primary_key: this.primary_key?.getName(),
-      foreign_key: foreign_key,
-    };
-    
-    this.relations.push(relationType);
-  }
-
-  protected manyToMany(){
+  // to do
+  protected manyToMany(EntityToRel: new () => Entity, input?: RelationInputType): void {
 
   }
 }

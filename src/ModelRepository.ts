@@ -118,12 +118,16 @@ export class ModelRepository {
                 query += ` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${relation.foreign_key} = table${i}.${relation.entity_primary_key}`;
                 i++;
               } else if (relation.relation === "OneToMany") {
-                query += ` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${relation.foreign_key} = table${i}.${primary_key.getName()}`;
-                i++;
-              }else if (relation.relation === "ManyToOne") {
                 query += ` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${primary_key.getName()} = table${i}.${relation.foreign_key}`;
                 i++;
-            }});
+              } else if (relation.relation === "ManyToOne") {
+                query += ` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${relation.foreign_key} = table${i}.${primary_key.getName()}`;
+                i++;
+            }/*else{
+                query += `\n SELECT * FROM ${`ref_${relation.entity_name}_${}`}`;
+                i++;
+            }*/
+        });
         };          
 
         if(input.where) {
@@ -192,7 +196,6 @@ export class ModelRepository {
 
         query+=`\n FROM ${this.model.getName()} \n `;
 
-
         if (input.joinAll) {
             const primary_key = this.model.getEntityInfo().primary_key;
             const relations = this.model.getEntityInfo().relations;
@@ -205,12 +208,17 @@ export class ModelRepository {
                 query += ` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${relation.foreign_key} = table${i}.${relation.entity_primary_key}`;
                 i++;
               } else if (relation.relation === "OneToMany") {
-                query += ` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${relation.foreign_key} = table${i}.${primary_key.getName()}`;
-                console.log(query, "PAOLOOO")
+                query += ` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${primary_key.getName()} = table${i}.${relation.foreign_key}`;
                 i++;
-              }
-            });
-        };   
+              } else if (relation.relation === "ManyToOne") {
+                query += ` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${relation.foreign_key} = table${i}.${primary_key.getName()}`;
+                i++;
+            }/*else{
+                query += `\n SELECT * FROM ${`ref_${relation.entity_name}_${}`}`;
+                i++;
+            }*/
+        });
+        };               
 
         if(input.where) {
             query+=` WHERE 1=1 `; // flag always true
