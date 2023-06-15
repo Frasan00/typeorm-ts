@@ -94,17 +94,15 @@ export abstract class Entity {
         `;
         const [result]: any[] = await mysql.query(checkConstraint);
   
-        if (result.length === 0) {
-          if (relation.relation !== "ManyToOne"){
-            const addConstraintQuery = `
-            ALTER TABLE ${this.entityName} 
-            ADD CONSTRAINT ${constraintName}
-            FOREIGN KEY (${relation.foreign_key})
-            REFERENCES ${relation.entity_name}(${relation.entity_primary_key});
-          `;
-          console.log(addConstraintQuery);
-          await mysql.query(addConstraintQuery);
-          }
+        if (result.length === 0 && relation.relation !== "ManyToOne") {
+          const addConstraintQuery = `
+          ALTER TABLE ${this.entityName} 
+          ADD CONSTRAINT ${constraintName}
+          FOREIGN KEY (${relation.foreign_key})
+          REFERENCES ${relation.entity_name}(${relation.entity_primary_key});
+        `;
+        console.log(addConstraintQuery);
+        await mysql.query(addConstraintQuery);
         } 
       } catch (err) {
         console.error("Error while initializing relations", err);
