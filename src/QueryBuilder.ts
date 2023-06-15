@@ -6,8 +6,6 @@ interface IQueryBuilderInput {
     mysql: mysql.Pool
 };
 
-type OperatorType = "=" | "<" | ">" | "<=" | ">=" | "LIKE";
-
 type ColumnNameType = string;
 
 type SortType = `ASC` | `DESC`;
@@ -38,72 +36,76 @@ export class QueryBuilder {
     protected whereConditions: string;
     protected joins: string;
     protected firstCondition: boolean;
+    protected index: number;
 
     public constructor(input: IQueryBuilderInput){
         this.model = input.model;
         this.mysql = input.mysql;
-        this.query = `SELECT * FROM ${this.model.getName()} table.1 \n `;
+        this.query = `SELECT * FROM ${this.model.getName()} table1 `;
         this.params = [];
-        this.whereConditions = ``; // flag always true to initiate where condition
-        this.joins = ` \n `;
-        this.firstCondition = true;
+        this.whereConditions = ``;
+        this.joins = ``;
+        this.firstCondition = true; 
+        this.index = 2;
     };
 
-    public notNull(): QueryBuilder{
-        
-        return this;
-    };
-
-    public null(): QueryBuilder{
-
-        return this;
-    };
-
-    public openBrackets(): QueryBuilder{
-        this.whereConditions += ` ( `;
-        return this;
-    };
-
-    public closeBrackets(): QueryBuilder {
-        this.whereConditions += ` ) `;
-        return this;
-    };
-
-    public where(column: string, operator: OperatorType, valueInput: {value: any}): QueryBuilder{
+    public where(query: string, valueInput: any[]): QueryBuilder{
         if(this.firstCondition === false) throw new Error("Where can only be used as the first condition");
-        this.whereConditions+=` WHERE ${column} ${operator} ?` ;
-        this.params.push(valueInput.value);
+        this.whereConditions+=`\n WHERE ${query} ` ;
+        this.params.push(...valueInput);
         this.firstCondition = false;
         return this;
     };
 
-    public andWhere(column: string, operator: OperatorType, valueInput: {value: any}): QueryBuilder{
+    public andWhere(query: string, valueInput: any[]): QueryBuilder{
         if(this.firstCondition === true) throw new Error("andWhere can only be used as a chain for others conditions");
-        this.whereConditions+=` AND ${column} ${operator} ?` ;
-        this.params.push(valueInput.value);
+        this.whereConditions+=`\n AND ${query} ` ;
+        this.params.push(...valueInput);
         return this;
     };
 
-    public orWhere(column: string, operator: OperatorType, valueInput: {value: any}): QueryBuilder{
+    public orWhere(query: string, valueInput: any[]): QueryBuilder{
         if(this.firstCondition === true) throw new Error("orWhere can only be used as a chain for others conditions");
-        this.whereConditions+=` OR ${column} ${operator} ?` ;
-        this.params.push(valueInput.value);
+        this.whereConditions+=`\n OR ${query} ` ;
+        this.params.push(...valueInput);
         return this;
     };
 
-    public leftJoin(entity1: new() => Entity, entity2: new() => Entity): QueryBuilder{
-
+    public leftJoin(relatedTableName: string, foreign_key: string): QueryBuilder{
+        const relation = this.model.getEntityInfo().relations.find((rel) => rel.entity_name === relatedTableName);
+        if(!relation) throw new Error("The model "+this.model.getName()+" doesn't have a relation with the given table");
+        const primary_key = this.model.getEntityInfo().primary_key?.getName();
+        if (relation.relation === "OneToOne") {
+            this.joins += ` \n LEFT JOIN ${relation.entity_name} table${this.index} ON table1.${relation.foreign_key} = table${this.index}.${relation.entity_primary_key}`;
+            this.index++;
+          } else if (relation.relation === "OneToMany") {
+            this.joins += ` \n LEFT JOIN ${relation.entity_name} table${this.index} ON table1.${primary_key} = table${this.index}.${relation.foreign_key}`;
+            this.index++;
+          } else if (relation.relation === "ManyToOne") {
+            this.joins += ` \n LEFT JOIN ${relation.entity_name} table${this.index} ON table1.${relation.foreign_key} = table${this.index}.${primary_key}`;
+            this.index++; }  
         return this;
     };
 
-    public innerJoin(): QueryBuilder{
-
+    public innerJoin(relatedTableName: string, foreign_key: string): QueryBuilder{
+        const relation = this.model.getEntityInfo().relations.find((rel) => rel.entity_name === relatedTableName);
+        if(!relation) throw new Error("The model "+this.model.getName()+" doesn't have a relation with the given table");
+        const primary_key = this.model.getEntityInfo().primary_key?.getName();
+        if (relation.relation === "OneToOne") {
+            this.joins += ` \n INNER JOIN ${relation.entity_name} table${this.index} ON table1.${relation.foreign_key} = table${this.index}.${relation.entity_primary_key}`;
+            this.index++;
+          } else if (relation.relation === "OneToMany") {
+            this.joins += ` \n INNER JOIN ${relation.entity_name} table${this.index} ON table1.${primary_key} = table${this.index}.${relation.foreign_key}`;
+            this.index++;
+          } else if (relation.relation === "ManyToOne") {
+            this.joins += ` \n INNER JOIN ${relation.entity_name} table${this.index} ON table1.${relation.foreign_key} = table${this.index}.${primary_key}`;
+            this.index++; }  
         return this;
     };
 
     public async getQueryResult(input?: GetQueryResultType): Promise<QueryOutputType>{
-        this.query+=this.whereConditions;
         this.query+=this.joins;
+        this.query+=this.whereConditions;
         if(this.validateBrackets(this.query) === false) { 
             return {
                 result: "Invalid brackets in the query",
@@ -113,17 +115,20 @@ export class QueryBuilder {
             }
         }
 
-        if(input?.orderBy){
-            this.query+=`\n ORDER BY `;
-            input.orderBy.map((order) => {
-                this.query+=` ${order.column} ${order.sort} `
+        if (input && input.orderBy) {
+            this.query += `\n ORDER BY `;
+            input.orderBy.map((order, index) => {
+              this.query += ` ${order.column} ${order.sort}`;
+              if (input.orderBy && index !== input.orderBy.length - 1) {
+                this.query += ",";
+              }
             });
-        };
+        }
 
         if(input?.limit) this.query+=` \n LIMIT ${input.limit} `
 
         try{
-            const [rows] = await this.mysql.query(`SELECT * FROM ${this.model.getName()}`); 
+            const [rows] = await this.mysql.query(this.query, this.params); 
             return {
                 result: rows,
                 status: "accepted",

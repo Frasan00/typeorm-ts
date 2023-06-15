@@ -29,11 +29,11 @@ mysql.connection()
     .then(async () => {
         // await populateDB(); // uncomment to populate DB
 
-        await userRepo.find({
+        /*await userRepo.find({
             joinAll: true
         })
         .then((data) => console.log(data))
-        .catch((err) => {});
+        .catch((err) => {});*/
 
         /*await postRepo.find({
                 joinAll: true
@@ -58,12 +58,13 @@ mysql.connection()
 
         // query builder
 
-        /*const query = userRepo.createQueryBuilder()
-        .where("id", "=", { value: 1 })
+        const query = userRepo.createQueryBuilder()
+        .where("table1.id = ?", [1])
+        .leftJoin("post", "post_id");
 
         query.getQueryResult()
         .then((data) => console.log(data))
-        .catch((err) => {}) ;*/
+        .catch((err) => {}) ;
 })
 
 const userRepo = mysql.getModelRepository(User);
