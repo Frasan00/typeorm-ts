@@ -1,5 +1,6 @@
 import { Entity } from "../../src/Entity";
 import { Column } from "../../src/Column";
+import { User } from "./User";
 
 export class Profile extends Entity {
 
@@ -21,6 +22,7 @@ export class Profile extends Entity {
         this.primary_key = this.id;
 
         this.addColumns(this.id, this.followers, this.bio);
+        this.manyToMany(User);
     }
 
 }

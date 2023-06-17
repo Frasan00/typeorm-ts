@@ -2,6 +2,7 @@ import { Entity } from "../../src/Entity";
 import { Column } from "../../src/Column";
 import { Profile } from "./Profile";
 import { Post } from "./Post";
+import { Product } from "./Product";
 
 export class User extends Entity {
 
@@ -23,6 +24,7 @@ export class User extends Entity {
         this.age = new Column({ name: "age", type: "INTEGER"});
         this.profile = this.oneToOne(Profile, { UNIQUE: true });
         this.oneToMany("post", "user_id");
+        this.manyToMany(Product, { joinTable: true });
 
         this.addColumns(this.id, this.name, this.age, this.profile);
     }

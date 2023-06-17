@@ -11,14 +11,22 @@ interface IEntityInput {
 
 type RelationsType = {
   relation: Relations; // type of relation
-  entity_name: string; 
-  entity_primary_key: string
-  foreign_key: string; // the field that enstablishes the relation with the given entity
+  entity_name?: string; 
+  entity_primary_key?: string
+  foreign_key?: string; // the field that enstablishes the relation with the given entity
+
+  // properties for manyToMany
+  joinTable?: boolean; // it serves the manyToMany relation, explains the table that creates the new joinTable
+  relatedEntity?: new () => Entity;
 }
 
 type RelationInputType = {
   NOT_NULL?: boolean | false;
   UNIQUE?: boolean | false;
+}
+
+type manyToManyInputType = {
+  joinTable?: boolean; // it serves the manyToMany relation, explains the table that creates the new joinTable
 }
 
 
@@ -52,7 +60,6 @@ export abstract class Entity {
 
   public async initializeColumns(mysql: mysql.Pool) {
     // Every time the DB restarts it's synched with latest changes dropping eevery existing constraint and rebuilding them
-    this.relations = [];
     const [constraintsShow]: any[] = await mysql.query(`
     SELECT *
     FROM information_schema.table_constraints
@@ -72,6 +79,8 @@ export abstract class Entity {
     if (this.columns.length === 0) {0
       throw new Error(`There are no columns to initialize in Entity ${this.entityName}`);
     }
+
+    this.relations = [];
 
     let query = `
       CREATE TABLE IF NOT EXISTS ${this.entityName} (
@@ -111,8 +120,26 @@ export abstract class Entity {
           AND constraint_type = 'FOREIGN KEY';
         `;
         const [result]: any[] = await mysql.query(checkConstraint);
+
+        if(relation.relation === "ManyToMany"){
+            if(!relation.relatedEntity) throw new Error("Missing informations for many to many relation");
+            if(!this.primary_key) throw new Error(`The entity ${this.entityName} does not have a primary key to be refered`);
+
+            const entity = new relation.relatedEntity();
+            if(!entity.primary_key) throw new Error(`The entity ${entity.entityName} does not have a primary key to be referred`);
+
+            if (relation.joinTable === true){
+              await mysql.query(`
+              CREATE TABLE IF NOT EXISTS ref_${this.entityName}_${entity.entityName}(
+                ${this.entityName}_${this.primary_key.getName()} ${this.selectType(this.primary_key.getConf().type, this.primary_key.getConf().typeLength)},
+                ${entity.entityName}_${entity.primary_key?.getName()} ${this.selectType(entity.primary_key.getConf().type, entity.primary_key.getConf().typeLength)},
+                PRIMARY KEY (${this.entityName}_${this.primary_key.getName()}, ${entity.entityName}_${entity.primary_key?.getName()}),
+                FOREIGN KEY (${this.entityName}_${this.primary_key.getName()}) REFERENCES ${this.entityName}(${this.primary_key.getName()}),
+                FOREIGN KEY (${entity.entityName}_${entity.primary_key?.getName()}) REFERENCES ${entity.entityName}(${entity.primary_key.getName()}));`)
+           };
+        }
   
-        if (result.length === 0 && relation.relation !== "OneToMany") {
+        else if (result.length === 0 && relation.relation !== "OneToMany") {
           const addConstraintQuery = `
           ALTER TABLE ${this.entityName} 
           ADD CONSTRAINT ${constraintName}
@@ -201,7 +228,6 @@ export abstract class Entity {
   protected manyToOne(Entity: new () => Entity, input?: RelationInputType): Column {
     const entity = new Entity();
     const entity_primary_key = entity.primary_key?.getName();
-    if (!entity_primary_key) throw new Error(`The entity ${entity.getName()} does not have a primary key to be referred`);
     if (!entity.primary_key) throw new Error(`The entity ${entity.getName()} does not have a primary key to be referred`);
   
     const foreign_key = `${entity.getName()}_${entity_primary_key}`;
@@ -227,8 +253,14 @@ export abstract class Entity {
     return column
   }
 
-  // to do
-  protected manyToMany(EntityToRel: new () => Entity, input?: RelationInputType): void {
+  protected manyToMany(EntityToRel: new () => Entity, input?: manyToManyInputType): void {
+    if (!this.primary_key) throw new Error(`The entity ${this.entityName} does not have a primary key to be referred`);
+    const relation: RelationsType = {
+      relation: "ManyToMany",
+      joinTable: input?.joinTable === true ? true : false,
+      relatedEntity: EntityToRel,
+    };
 
+    this.relations.push(relation);
   }
 }

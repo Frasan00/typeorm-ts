@@ -4,6 +4,7 @@ import { DatabaseController } from "../src/DatabaseController";
 import { User } from "./entities/User";
 import { Profile } from "./entities/Profile";
 import { Post } from "./entities/Post";
+import { Product } from "./entities/Product";
 
 require("dotenv").config();
 const app = express();
@@ -22,7 +23,7 @@ const mysql = new DatabaseController({
     password: process.env.MYSQL_PASSWORD || "password",
     port: port,
     synchronize: true,
-    entities: [Profile, User, Post]
+    entities: [Product, Profile, User, Post]
 });
 
 mysql.connection()

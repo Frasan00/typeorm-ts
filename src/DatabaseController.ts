@@ -1,7 +1,6 @@
 import mysql, { Pool } from "mysql2/promise";
 import { Entity } from "./Entity";
 import { ModelRepository } from "./ModelRepository";
-import { Column } from "./Column";
 
 interface IDatabaseController {
     readonly host: string,
@@ -112,8 +111,6 @@ protected async syncTables() {
         }
     }
 }
-
-
 
     protected async initializeRelations(){
         if (this.entities.length === 0) throw new Error(`There are no entities to initialize`);
