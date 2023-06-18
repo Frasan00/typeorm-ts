@@ -23,8 +23,6 @@ export class User extends Entity {
         this.name = new Column({ name: "name", type: "STRING", constraints: { NOT_NULL: true } });
         this.age = new Column({ name: "age", type: "INTEGER"});
         this.profile = this.oneToOne(Profile, { UNIQUE: true });
-        this.oneToMany("post", "user_id");
-        this.manyToMany(Product, { joinTable: true });
 
         this.addColumns(this.id, this.name, this.age, this.profile);
     }

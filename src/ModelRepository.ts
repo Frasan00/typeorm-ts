@@ -123,11 +123,12 @@ export class ModelRepository {
               } else if (relation.relation === "ManyToOne") {
                 query += ` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${relation.foreign_key} = table${i}.${primary_key.getName()}`;
                 i++;
-            }/*else{
-                query += `\n SELECT * FROM ${`ref_${relation.entity_name}_${}`}`;
+            }else{
+                query+= `\n INNER JOIN ${relation.relatedEntity1_name} table${i} ON table1.${relation.relatedEntity1_foreign_key} = table${i}.${relation.relatedEntity1_key} `;
                 i++;
-            }*/
-        });
+                query+= `\n INNER JOIN ${relation.relatedEntity2_name} table${i} ON table1.${relation.relatedEntity2_foreign_key} = table${i}.${relation.relatedEntity2_key} `;
+                i++;
+            }});
         };          
 
         if(input.where) {
@@ -213,12 +214,13 @@ export class ModelRepository {
               } else if (relation.relation === "ManyToOne") {
                 query += ` \n LEFT JOIN ${relation.entity_name} table${i} ON table1.${relation.foreign_key} = table${i}.${primary_key.getName()}`;
                 i++;
-            }/*else{
-                query += `\n SELECT * FROM ${`ref_${relation.entity_name}_${}`}`;
+            }else{
+                query+= `\n INNER JOIN ${relation.relatedEntity1_name} table${i} ON table1.${relation.relatedEntity1_foreign_key} = table${i}.${relation.relatedEntity1_key} `;
                 i++;
-            }*/
-        });
-        };               
+                query+= `\n INNER JOIN ${relation.relatedEntity2_name} table${i} ON table1.${relation.relatedEntity2_foreign_key} = table${i}.${relation.relatedEntity2_key} `;
+                i++;
+            }});
+        };                  
 
         if(input.where) {
             query+=` WHERE 1=1 `; // flag always true

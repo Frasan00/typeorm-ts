@@ -38,7 +38,7 @@ export class DatabaseController {
             await this.processEntities();
             if(this.synchronize === true) await this.syncTables();
             await this.initializeRelations()
-                .then((_) => console.log("Entities were initialized correctly"))
+            .then((_) => console.log("Entities were initialized correctly"))
         }catch(err){
             console.error(err);
         }
@@ -70,6 +70,7 @@ protected async syncTables() {
     for (const Entity of this.entities) {
         const entity = new Entity();
         const entityName = entity.getName();
+        if(!databaseTables.includes(entityName)) continue;
         const [databaseColumnsShow]: any[] = await this.mysql.query(`SHOW COLUMNS FROM ${entityName}`);
         const databaseColumns: any[] = databaseColumnsShow.map((row: any) => Object.values(row)[0]);
 
@@ -151,7 +152,7 @@ protected async syncTables() {
             await Promise.all(promises);
             } catch (err) {
             console.error(err);
-            }
+            } 
       }
 
     public getModelRepository(model: new () => Entity): ModelRepository {

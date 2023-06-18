@@ -71,23 +71,29 @@ export class QueryBuilder {
         return this;
     };
 
-    public leftJoin(relatedTableName: string, foreign_key: string): QueryBuilder{
-        const relation = this.model.getEntityInfo().relations.find((rel) => rel.entity_name === relatedTableName);
+    public leftJoin(relatedTableName: string): QueryBuilder{
+        const relation = this.model.getEntityInfo().relations.find((rel) => rel.entity_name === relatedTableName || rel.relatedEntity1_name === relatedTableName);
         if(!relation) throw new Error("The model "+this.model.getName()+" doesn't have a relation with the given table");
         const primary_key = this.model.getEntityInfo().primary_key?.getName();
         if (relation.relation === "OneToOne") {
             this.joins += ` \n LEFT JOIN ${relation.entity_name} table${this.index} ON table1.${relation.foreign_key} = table${this.index}.${relation.entity_primary_key}`;
             this.index++;
           } else if (relation.relation === "OneToMany") {
-            this.joins += ` \n LEFT JOIN ${relation.entity_name} table${this.index} ON table1.${primary_key} = table${this.index}.${relation.foreign_key}`;
-            this.index++;
+                this.joins += ` \n LEFT JOIN ${relation.entity_name} table${this.index} ON table1.${primary_key} = table${this.index}.${relation.foreign_key}`;
+                this.index++;
           } else if (relation.relation === "ManyToOne") {
-            this.joins += ` \n LEFT JOIN ${relation.entity_name} table${this.index} ON table1.${relation.foreign_key} = table${this.index}.${primary_key}`;
-            this.index++; }  
+                this.joins += ` \n LEFT JOIN ${relation.entity_name} table${this.index} ON table1.${relation.foreign_key} = table${this.index}.${primary_key}`;
+                this.index++; }
+            else{
+                this.joins+= `\n LEFT JOIN ${relation.relatedEntity1_name} table${this.index} ON table1.${relation.relatedEntity1_foreign_key} = table${this.index}.${relation.relatedEntity1_key} `;
+                this.index++;
+                this.joins+= `\n LEFT JOIN ${relation.relatedEntity2_name} table${this.index} ON table1.${relation.relatedEntity2_foreign_key} = table${this.index}.${relation.relatedEntity2_key} `;
+                this.index++;
+            }
         return this;
     };
 
-    public innerJoin(relatedTableName: string, foreign_key: string): QueryBuilder{
+    public innerJoin(relatedTableName: string): QueryBuilder{
         const relation = this.model.getEntityInfo().relations.find((rel) => rel.entity_name === relatedTableName);
         if(!relation) throw new Error("The model "+this.model.getName()+" doesn't have a relation with the given table");
         const primary_key = this.model.getEntityInfo().primary_key?.getName();
@@ -95,11 +101,17 @@ export class QueryBuilder {
             this.joins += ` \n INNER JOIN ${relation.entity_name} table${this.index} ON table1.${relation.foreign_key} = table${this.index}.${relation.entity_primary_key}`;
             this.index++;
           } else if (relation.relation === "OneToMany") {
-            this.joins += ` \n INNER JOIN ${relation.entity_name} table${this.index} ON table1.${primary_key} = table${this.index}.${relation.foreign_key}`;
-            this.index++;
+                this.joins += ` \n INNER JOIN ${relation.entity_name} table${this.index} ON table1.${primary_key} = table${this.index}.${relation.foreign_key}`;
+                this.index++;
           } else if (relation.relation === "ManyToOne") {
-            this.joins += ` \n INNER JOIN ${relation.entity_name} table${this.index} ON table1.${relation.foreign_key} = table${this.index}.${primary_key}`;
-            this.index++; }  
+                this.joins += ` \n INNER JOIN ${relation.entity_name} table${this.index} ON table1.${relation.foreign_key} = table${this.index}.${primary_key}`;
+                this.index++; }
+            else{
+                this.joins+= `\n INNER JOIN ${relation.relatedEntity1_name} table${this.index} ON table1.${relation.relatedEntity1_foreign_key} = table${this.index}.${relation.relatedEntity1_key} `;
+                this.index++;
+                this.joins+= `\n INNER JOIN ${relation.relatedEntity2_name} table${this.index} ON table1.${relation.relatedEntity2_foreign_key} = table${this.index}.${relation.relatedEntity2_key} `;
+                this.index++;
+            }
         return this;
     };
 

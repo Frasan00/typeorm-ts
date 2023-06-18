@@ -22,7 +22,6 @@ export class Profile extends Entity {
         this.primary_key = this.id;
 
         this.addColumns(this.id, this.followers, this.bio);
-        this.manyToMany(User);
     }
 
 }

@@ -9,24 +9,24 @@ interface IEntityInput {
   readonly primary_key?: Column;
 }
 
-type RelationsType = {
+export type RelationsType = {
   relation: Relations; // type of relation
   entity_name?: string; 
   entity_primary_key?: string
   foreign_key?: string; // the field that enstablishes the relation with the given entity
 
-  // properties for manyToMany
-  joinTable?: boolean; // it serves the manyToMany relation, explains the table that creates the new joinTable
-  relatedEntity?: new () => Entity;
+  // for many to many
+  relatedEntity1_name?: string;
+  relatedEntity1_key?: string;
+  relatedEntity1_foreign_key?: string;
+  relatedEntity2_name?: string;
+  relatedEntity2_key?: string;
+  relatedEntity2_foreign_key?: string;
 }
 
-type RelationInputType = {
+export type RelationInputType = {
   NOT_NULL?: boolean | false;
   UNIQUE?: boolean | false;
-}
-
-type manyToManyInputType = {
-  joinTable?: boolean; // it serves the manyToMany relation, explains the table that creates the new joinTable
 }
 
 
@@ -63,6 +63,7 @@ export abstract class Entity {
     const [constraintsShow]: any[] = await mysql.query(`
     SELECT *
     FROM information_schema.table_constraints
+    WHERE TABLE_NAME = "${this.entityName}";
     `);
     const constraints: string[] = constraintsShow.map((row: any) => Object.values(row)[2]);
     for (const constraint of constraints){
@@ -111,7 +112,7 @@ export abstract class Entity {
   public async initializeRelations(mysql: mysql.Pool) {
     const promises = this.relations.map(async (relation) => {
       try {
-        const constraintName = `${this.entityName}_${relation.foreign_key}_constraint`;
+        const constraintName = `${this.entityName}_${relation.foreign_key || "ManyToMany"}_constraint`;
         const checkConstraint = `
           SELECT constraint_name
           FROM information_schema.table_constraints
@@ -120,43 +121,40 @@ export abstract class Entity {
           AND constraint_type = 'FOREIGN KEY';
         `;
         const [result]: any[] = await mysql.query(checkConstraint);
-
-        if(relation.relation === "ManyToMany"){
-            if(!relation.relatedEntity) throw new Error("Missing informations for many to many relation");
-            if(!this.primary_key) throw new Error(`The entity ${this.entityName} does not have a primary key to be refered`);
-
-            const entity = new relation.relatedEntity();
-            if(!entity.primary_key) throw new Error(`The entity ${entity.entityName} does not have a primary key to be referred`);
-
-            if (relation.joinTable === true){
-              await mysql.query(`
-              CREATE TABLE IF NOT EXISTS ref_${this.entityName}_${entity.entityName}(
-                ${this.entityName}_${this.primary_key.getName()} ${this.selectType(this.primary_key.getConf().type, this.primary_key.getConf().typeLength)},
-                ${entity.entityName}_${entity.primary_key?.getName()} ${this.selectType(entity.primary_key.getConf().type, entity.primary_key.getConf().typeLength)},
-                PRIMARY KEY (${this.entityName}_${this.primary_key.getName()}, ${entity.entityName}_${entity.primary_key?.getName()}),
-                FOREIGN KEY (${this.entityName}_${this.primary_key.getName()}) REFERENCES ${this.entityName}(${this.primary_key.getName()}),
-                FOREIGN KEY (${entity.entityName}_${entity.primary_key?.getName()}) REFERENCES ${entity.entityName}(${entity.primary_key.getName()}));`)
-           };
-        }
   
-        else if (result.length === 0 && relation.relation !== "OneToMany") {
+        if (result.length === 0 && relation.relation === "ManyToMany") {
+          const addConstraintQuery1 = `
+          ALTER TABLE ${this.entityName} 
+          ADD CONSTRAINT ${constraintName}
+          FOREIGN KEY (${relation.relatedEntity1_foreign_key}) REFERENCES ${relation.relatedEntity1_name}(${relation.relatedEntity1_key});
+          `;
+          console.log(addConstraintQuery1);
+          await mysql.query(addConstraintQuery1);
+  
+          const addConstraintQuery2 = `
+          ALTER TABLE ${this.entityName} 
+          ADD CONSTRAINT ${constraintName}_2
+          FOREIGN KEY (${relation.relatedEntity2_foreign_key}) REFERENCES ${relation.relatedEntity2_name}(${relation.relatedEntity2_key});
+          `;
+          console.log(addConstraintQuery2);
+          await mysql.query(addConstraintQuery2);
+        } else if (result.length === 0) {
           const addConstraintQuery = `
           ALTER TABLE ${this.entityName} 
           ADD CONSTRAINT ${constraintName}
           FOREIGN KEY (${relation.foreign_key})
           REFERENCES ${relation.entity_name}(${relation.entity_primary_key});
-        `;
-        console.log(addConstraintQuery);
-        await mysql.query(addConstraintQuery);
-        } 
+          `;
+          console.log(addConstraintQuery);
+          await mysql.query(addConstraintQuery);
+        }
       } catch (err) {
         console.error("Error while initializing relations", err);
       }
+
+      await Promise.all(promises);
     });
-  
-    await Promise.all(promises);
   }
-  
   
 
   public selectType(input: string, length: number): string{
@@ -188,7 +186,6 @@ export abstract class Entity {
   protected oneToOne(Entity: new () => Entity, input?: RelationInputType): Column{
     const entity = new Entity();
     const entity_primary_key = entity.primary_key?.getName();
-    if(!entity_primary_key) throw new Error(`The entity ${entity.getName()} does not have a primary key to be referred`);
     if(!entity.primary_key) throw new Error(`The entity ${entity.getName()} does not have a primary key to be referred`);
 
     const column = new Column({
@@ -253,14 +250,4 @@ export abstract class Entity {
     return column
   }
 
-  protected manyToMany(EntityToRel: new () => Entity, input?: manyToManyInputType): void {
-    if (!this.primary_key) throw new Error(`The entity ${this.entityName} does not have a primary key to be referred`);
-    const relation: RelationsType = {
-      relation: "ManyToMany",
-      joinTable: input?.joinTable === true ? true : false,
-      relatedEntity: EntityToRel,
-    };
-
-    this.relations.push(relation);
-  }
 }

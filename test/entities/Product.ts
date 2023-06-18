@@ -4,9 +4,9 @@ import { User } from "./User";
 
 export class Product extends Entity {
 
-    protected id: Column;
-    protected product_name: Column;
-    protected price: Column;
+    public id: Column;
+    public product_name: Column;
+    public price: Column;
 
     public constructor(){
         super({
@@ -18,8 +18,6 @@ export class Product extends Entity {
         this.product_name = new Column({ name: "name", type: "STRING", typeLength: 30 , constraints: { NOT_NULL: true }});
         this.price = new Column({ name: "price", type: "FLOAT", typeLength: 30 });
         this.primary_key = this.id;
-        
-        this.manyToMany(User);
 
         this.addColumns(this.id, this.product_name, this.price);
     }
